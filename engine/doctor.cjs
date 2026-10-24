@@ -35,14 +35,19 @@ function localChecks() {
   } catch (err) {
     checks.push(check('fonts', false, err.message));
   }
-  const py = spawnSync(
-    pythonPath(),
-    ['-c', 'import faster_whisper; print(faster_whisper.__version__)'],
-    {
-      encoding: 'utf8',
-      windowsHide: true,
-    },
-  );
+  let python;
+  try {
+    python = pythonPath();
+  } catch (err) {
+    checks.push(
+      check('python-faster-whisper', false, `config/local.json is not valid JSON: ${err.message}`),
+    );
+    return checks;
+  }
+  const py = spawnSync(python, ['-c', 'import faster_whisper; print(faster_whisper.__version__)'], {
+    encoding: 'utf8',
+    windowsHide: true,
+  });
   const pyOk = !py.error && py.status === 0;
   checks.push(
     check(

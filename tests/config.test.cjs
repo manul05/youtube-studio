@@ -39,6 +39,22 @@ test('models config names the Gemini TTS model', () => {
   assert.equal(models().tts, 'gemini-3.8-flash-tts');
 });
 
+test('doctor reports a malformed config/local.json instead of crashing', async () => {
+  const { rootPath } = require('../engine/util/files.cjs');
+  const local = rootPath('config', 'local.json');
+  const backup = fs.existsSync(local) ? fs.readFileSync(local) : null;
+  fs.writeFileSync(local, '{ "python": "C:\\bad" }');
+  try {
+    const report = await doctor({ fetch: async () => ({ ok: false, status: 401 }), env: {} });
+    const py = report.checks.find((c) => c.name === 'python-faster-whisper');
+    assert.equal(py.ok, false);
+    assert.match(py.detail, /config\/local\.json/);
+  } finally {
+    if (backup) fs.writeFileSync(local, backup);
+    else fs.unlinkSync(local);
+  }
+});
+
 test('doctor reports a rejected Gemini key as a failed check without throwing', async () => {
   const fakeFetch = async () => ({ ok: false, status: 401, json: async () => ({}) });
   const report = await doctor({

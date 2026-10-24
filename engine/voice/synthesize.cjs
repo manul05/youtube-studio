@@ -10,7 +10,22 @@ const { tts, RateLimited } = require('./gemini.cjs');
 
 const SAMPLE_INTRO_WORDS = 110;
 
-const chapterId = (chapter) => `c${String(chapter.id).padStart(2, '0')}`;
+const PARAGRAPH_ID = /^cd{2}pd{2}$/;
+
+/** "c03" for chapter 3. Ids come from agent-written JSON, so they are validated before use. */
+function chapterId(chapter) {
+  const n = Number(chapter.id);
+  if (!Number.isInteger(n) || n < 1 || n > 99) {
+    throw new Error(`Invalid chapter id "${chapter.id}" (use a whole number 1–99).`);
+  }
+  return `c${String(n).padStart(2, '0')}`;
+}
+
+function assertParagraphId(id) {
+  if (!PARAGRAPH_ID.test(String(id))) {
+    throw new Error(`Invalid paragraph id "${id}" (expected the form c03p02).`);
+  }
+}
 
 /** Voice settings: the channel default, overridden by brief.voice when present. */
 function voiceSettings(project) {
@@ -178,6 +193,7 @@ async function synthesizeSample(project, opts = {}) {
 
 /** Re-record one paragraph on its own; alignment uses it in place of the chapter's version. */
 async function retakeParagraph(project, paragraphId, opts = {}) {
+  assertParagraphId(paragraphId);
   const script = readJson(project.path('script.json'));
   const paragraph = script.chapters.flatMap((c) => c.paragraphs).find((p) => p.id === paragraphId);
   if (!paragraph) throw new Error(`No paragraph ${paragraphId} in script.json.`);
@@ -198,4 +214,5 @@ module.exports = {
   retakeParagraph,
   voiceSettings,
   chapterId,
+  assertParagraphId,
 };

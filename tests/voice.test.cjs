@@ -195,3 +195,17 @@ test('the voice command exits 75 with a resume message when rate limited', async
   }
   assert.match(lines.join('\n'), /run .*voice.* again later/i);
 });
+
+test('chapter and paragraph ids cannot steer files outside the project', async () => {
+  const project = projectWithChapters(1);
+  const script = JSON.parse(fs.readFileSync(project.path('script.json'), 'utf8'));
+  script.chapters[0].id = '../../evil';
+  fs.writeFileSync(project.path('script.json'), JSON.stringify(script));
+  await assert.rejects(() => synthesizeChapters(project, options(fakeGemini())), /chapter id/i);
+
+  const { retakeParagraph } = require('../engine/voice/synthesize.cjs');
+  await assert.rejects(
+    () => retakeParagraph(project, '..\..\evil', options(fakeGemini())),
+    /paragraph id/i,
+  );
+});

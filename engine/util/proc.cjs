@@ -49,6 +49,8 @@ function pythonPath() {
     const configured = readJson(local).python;
     if (configured && fs.existsSync(configured)) return configured;
   }
+  const venv = rootPath('.venv', 'Scripts', 'python.exe');
+  if (fs.existsSync(venv)) return venv;
   return 'python';
 }
 

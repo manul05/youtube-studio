@@ -2,7 +2,12 @@
 
 const { openProject } = require('../project.cjs');
 const { writeStamp } = require('../next.cjs');
-const { synthesizeChapters, synthesizeSample, retakeParagraph } = require('./synthesize.cjs');
+const {
+  synthesizeChapters,
+  synthesizeSample,
+  retakeParagraph,
+  assertParagraphId,
+} = require('./synthesize.cjs');
 
 const RESUME_LATER = 75; // agents must stop and tell the owner to resume later
 
@@ -50,6 +55,7 @@ const COMMANDS = {
     run: async ({ positional }) => {
       const project = projectFrom(positional);
       if (!positional[1]) throw new Error('Name the paragraph, e.g. c03p02');
+      assertParagraphId(positional[1]);
       const result = await retakeParagraph(project, positional[1]);
       if (result.rateLimited) return rateLimited(project, 'voice:retake', result.retryAfterSec);
       console.log(`Retake saved for ${positional[1]}. Run npm run align -- ${project.name} next.`);

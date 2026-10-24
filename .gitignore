@@ -8,3 +8,4 @@ config/pin.json
 __pycache__/
 *.partial.*
 tests/live/out/
+.venv/

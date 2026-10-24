@@ -5,7 +5,7 @@ const { readJson, writeJson, ensureDir } = require('../util/files.cjs');
 const { run, ffmpegPath, probe } = require('../util/proc.cjs');
 const { qc } = require('../config.cjs');
 const { spokenText } = require('../words/text.cjs');
-const { chapterId } = require('../voice/synthesize.cjs');
+const { chapterId, assertParagraphId } = require('../voice/synthesize.cjs');
 const { matchWords, mapSubstitutions } = require('./match.cjs');
 const { runWhisper, asrLanguage } = require('./whisper.cjs');
 
@@ -49,6 +49,7 @@ async function splitChapter(project, chapterNumber, { asr = defaultAsr(project) 
   const chapter = script.chapters.find((c) => Number(c.id) === Number(chapterNumber));
   if (!chapter) throw new Error(`No chapter ${chapterNumber} in script.json.`);
   const cid = chapterId(chapter);
+  chapter.paragraphs.forEach((p) => assertParagraphId(p.id));
   const source = project.path('work', 'voice', 'chapters', `${cid}.wav`);
   if (!fs.existsSync(source)) return { issues: [`${cid}: no recording yet (run npm run voice).`] };
 
@@ -132,6 +133,7 @@ async function splitChapter(project, chapterNumber, { asr = defaultAsr(project) 
 /** Align every chapter; remove paragraph files that no longer exist in the script. */
 async function alignProject(project, opts = {}) {
   const script = readJson(project.path('script.json'));
+  script.chapters.forEach((c) => c.paragraphs.forEach((p) => assertParagraphId(p.id)));
   const keep = new Set(script.chapters.flatMap((c) => c.paragraphs.map((p) => p.id)));
   for (const dir of [project.path('work', 'voice', 'paragraphs'), project.path('work', 'align')]) {
     if (!fs.existsSync(dir)) continue;

@@ -92,4 +92,4 @@ function scriptIssues(script, brief, channelProfile = {}, shorts = []) {
   return issues;
 }
 
-module.exports = { scriptIssues, shortsIssues, allSentences, DEFAULT_WPM };
+module.exports = { scriptIssues, shortsIssues, allSentences, DEFAULT_WPM, PARAGRAPH_ID };

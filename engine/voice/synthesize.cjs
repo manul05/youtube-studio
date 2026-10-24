@@ -6,11 +6,11 @@ const { readJson, writeJson, ensureDir, sha256File, sha256Text } = require('../u
 const { run, ffmpegPath } = require('../util/proc.cjs');
 const { channel, models, loadEnv } = require('../config.cjs');
 const { spokenText, wordCount } = require('../words/text.cjs');
+const { PARAGRAPH_ID } = require('../words/script.cjs');
 const { tts, RateLimited } = require('./gemini.cjs');
 
 const SAMPLE_INTRO_WORDS = 110;
 
-const PARAGRAPH_ID = /^cd{2}pd{2}$/;
 
 /** "c03" for chapter 3. Ids come from agent-written JSON, so they are validated before use. */
 function chapterId(chapter) {

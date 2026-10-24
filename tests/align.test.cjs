@@ -160,3 +160,19 @@ test('voiceIssues flags long pauses inside a paragraph and an English pace outsi
   assert.match(issues, /c01p01.*pause/);
   assert.match(issues, /words per minute/);
 });
+
+test('alignment refuses paragraph ids that could escape the project folder', async () => {
+  const { createProject, openProject } = require('../engine/project.cjs');
+  const { alignProject } = require('../engine/align/split.cjs');
+  const projectsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'studio-align-'));
+  const project = openProject(
+    createProject('demo', { channel: 'en-placeholder', date: '2026-10-25', projectsDir }),
+  );
+  const script = {
+    chapters: [
+      { id: 1, title: 'One', paragraphs: [{ id: '../../evil', text: 'x. [[analysis]]' }] },
+    ],
+  };
+  fs.writeFileSync(project.path('script.json'), JSON.stringify(script));
+  await assert.rejects(() => alignProject(project, { asr: async () => [] }), /paragraph id/i);
+});

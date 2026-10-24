@@ -209,3 +209,9 @@ test('chapter and paragraph ids cannot steer files outside the project', async (
     /paragraph id/i,
   );
 });
+
+test('valid paragraph ids are accepted', () => {
+  const { assertParagraphId } = require('../engine/voice/synthesize.cjs');
+  assert.doesNotThrow(() => assertParagraphId('c01p01'));
+  assert.doesNotThrow(() => assertParagraphId('c12p34'));
+});

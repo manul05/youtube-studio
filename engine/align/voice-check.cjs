@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const { readJson } = require('../util/files.cjs');
 const { qc, channel } = require('../config.cjs');
+const { assertParagraphId } = require('../voice/synthesize.cjs');
 
 /** Pauses inside paragraphs and the overall speaking pace, from aligned words. */
 function pacingIssues(paragraphs, { language, channelWpm }) {
@@ -73,6 +74,7 @@ function voiceIssues(project) {
   const paragraphs = [];
   const issues = [];
   for (const p of script.chapters.flatMap((c) => c.paragraphs)) {
+    assertParagraphId(p.id);
     const alignFile = project.path('work', 'align', `${p.id}.json`);
     const wav = project.path('work', 'voice', 'paragraphs', `${p.id}.wav`);
     if (!fs.existsSync(alignFile) || !fs.existsSync(wav)) {

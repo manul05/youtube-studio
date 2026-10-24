@@ -14,8 +14,11 @@ const easeInOut = (x) => {
 /** 0→1 as an element animates in, starting at `at` seconds over `dur` seconds. */
 const reveal = (t, at, dur = 0.45) => easeOut((t - at) / dur);
 
-/** Layout unit: 1 at 1920 px wide (long) or 1080 px wide (Shorts). */
-const unit = (env) => (env.format === 'short' ? env.width / 1080 : env.width / 1920);
+/**
+ * Layout unit: 1 at 1920 px wide for long-form. Shorts are watched on a phone held close, so
+ * the same design sizes are enlarged (1080 px wide ≈ 1.42 units).
+ */
+const unit = (env) => (env.format === 'short' ? env.width / 760 : env.width / 1920);
 const palette = (env) => env.style.meta.palette;
 const fonts = (env) => env.style.meta.fonts;
 

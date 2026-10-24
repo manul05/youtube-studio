@@ -1,0 +1,75 @@
+{
+  "id": "evidence",
+  "name": "Evidence Board",
+  "role": "main",
+  "bestFor": [
+    "investigation",
+    "crime",
+    "scandal",
+    "mystery",
+    "evidence",
+    "corruption",
+    "court",
+    "leak",
+    "case"
+  ],
+  "mixesWith": ["editorial", "map-doc"],
+  "formats": ["long", "short"],
+  "palette": {
+    "bg": "#5a4230",
+    "surface": "#3d2c20",
+    "ink": "#fbf5e9",
+    "muted": "#d8c8b0",
+    "accent": "#d63a2f",
+    "accent2": "#e8c35a"
+  },
+  "fonts": {
+    "display": "SansBold",
+    "body": "Sans",
+    "serif": "Serif",
+    "mono": "Mono",
+    "deva": "Deva"
+  },
+  "captionStyle": {
+    "size": 64,
+    "weight": 700,
+    "bg": "#000000b3",
+    "ink": "#ffffff"
+  },
+  "motion": {
+    "revealSec": 0.45,
+    "spring": {
+      "stiffness": 120,
+      "damping": 14
+    }
+  },
+  "transition": "cut",
+  "tagCorner": "top-right",
+  "musicMoods": ["mystery", "tense", "dark"],
+  "imagePromptSuffix": "gritty investigative photo-illustration, pinned to a corkboard feel, harsh desk-lamp light, no text, 16:9",
+  "stockGrade": {
+    "saturate": 0.7,
+    "contrast": 1.15,
+    "brightness": 0.9,
+    "tint": "#5a4230",
+    "tintAlpha": 0.15,
+    "vignette": 0.45,
+    "grain": 0.08
+  },
+  "fallback": [
+    "art-focus",
+    "art-tour",
+    "stock",
+    "kinetic",
+    "stat",
+    "compare",
+    "timeline",
+    "map",
+    "list",
+    "chart",
+    "endcard"
+  ],
+  "qc": {
+    "changeThreshold": 13
+  }
+}

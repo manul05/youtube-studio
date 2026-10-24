@@ -47,7 +47,16 @@ const COMMANDS = {
     summary: 'Check brief.json (idea step).',
     run: ({ positional }) => {
       const project = projectFrom(positional);
-      return report(project, 'idea', briefIssues(project.brief));
+      const brief = project.brief;
+      const { packExists } = require('../styles/loader.cjs');
+      const packs = [
+        brief.style && brief.style.main,
+        ...Object.values((brief.style && brief.style.accents) || {}),
+      ];
+      const missing = packs
+        .filter((id) => id && !packExists(id))
+        .map((id) => `Style pack "${id}" does not exist (see npm run styles).`);
+      return report(project, 'idea', [...briefIssues(brief), ...missing]);
     },
   },
   'research:check': {

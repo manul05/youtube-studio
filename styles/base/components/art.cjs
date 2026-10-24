@@ -69,7 +69,7 @@ function stock(ctx, beat, t, assets, env) {
       size: Math.round(40 * u),
       maxLines: 1,
       font: s.fonts(env).display,
-      color: pal.ink,
+      color: '#ffffff', // always light: the bar is dark in every pack
     });
     ctx.restore();
   }

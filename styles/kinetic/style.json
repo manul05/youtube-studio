@@ -1,0 +1,66 @@
+{
+  "id": "kinetic",
+  "name": "Kinetic Typography",
+  "role": "accent",
+  "bestFor": ["quote", "manifesto", "slogan", "hook", "statement"],
+  "mixesWith": ["editorial", "map-doc", "evidence"],
+  "formats": ["long", "short"],
+  "palette": {
+    "bg": "#111111",
+    "surface": "#1f1f1f",
+    "ink": "#ffffff",
+    "muted": "#a8a8a8",
+    "accent": "#ffd400",
+    "accent2": "#ff3d6e"
+  },
+  "fonts": {
+    "display": "SansBold",
+    "body": "Sans",
+    "serif": "Serif",
+    "mono": "Mono",
+    "deva": "Deva"
+  },
+  "captionStyle": {
+    "size": 64,
+    "weight": 700,
+    "bg": "#000000b3",
+    "ink": "#ffffff"
+  },
+  "motion": {
+    "revealSec": 0.45,
+    "spring": {
+      "stiffness": 120,
+      "damping": 14
+    }
+  },
+  "transition": "cut",
+  "tagCorner": "top-right",
+  "musicMoods": ["energetic", "tense"],
+  "imagePromptSuffix": "bold graphic poster illustration, high contrast, no text, 16:9",
+  "stockGrade": {
+    "saturate": 1,
+    "contrast": 1.1,
+    "brightness": 1,
+    "tint": "#111111",
+    "tintAlpha": 0.1,
+    "vignette": 0.3,
+    "grain": 0
+  },
+  "fallback": [
+    "art-focus",
+    "art-tour",
+    "stock",
+    "stat",
+    "compare",
+    "timeline",
+    "map",
+    "document",
+    "list",
+    "chart",
+    "chapter",
+    "endcard"
+  ],
+  "qc": {
+    "changeThreshold": 13
+  }
+}

@@ -19,8 +19,19 @@
     "mono": "Mono",
     "deva": "Deva"
   },
-  "captionStyle": { "size": 64, "weight": 700, "bg": "#000000b3", "ink": "#ffffff" },
-  "motion": { "revealSec": 0.45, "spring": { "stiffness": 120, "damping": 14 } },
+  "captionStyle": {
+    "size": 64,
+    "weight": 700,
+    "bg": "#000000b3",
+    "ink": "#ffffff"
+  },
+  "motion": {
+    "revealSec": 0.45,
+    "spring": {
+      "stiffness": 120,
+      "damping": 14
+    }
+  },
   "transition": "crossfade",
   "tagCorner": "top-right",
   "musicMoods": ["documentary", "neutral"],
@@ -34,5 +45,7 @@
     "vignette": 0.35,
     "grain": 0
   },
-  "qc": {}
+  "qc": {
+    "changeThreshold": 13.41
+  }
 }

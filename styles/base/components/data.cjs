@@ -66,7 +66,7 @@ function stat(ctx, beat, t, assets, env) {
     y: env.height * 0.3,
     width: safe.x1 - safe.x0 - 80 * u,
     size: Math.round(200 * u),
-    minSize: Math.round(110 * u),
+    minSize: Math.round(72 * u),
     maxLines: 1,
     align: 'center',
     font: s.fonts(env).display,
@@ -98,18 +98,29 @@ function compare(ctx, beat, t, assets, env) {
   s.fill(ctx, env, pal.bg);
   const times = compareSchedule(beat.fields, env.duration);
   const gap = 40 * u;
-  const colW = (safe.x1 - safe.x0 - gap) / 2;
+  const vertical = env.format === 'short';
+  const fullW = safe.x1 - safe.x0;
+  const fullH = safe.y1 - safe.y0;
+  const box = (k) =>
+    vertical
+      ? { x: safe.x0, y: safe.y0 + k * (fullH / 2 + gap / 2), w: fullW, h: fullH / 2 - gap / 2 }
+      : {
+          x: safe.x0 + k * ((fullW - gap) / 2 + gap),
+          y: safe.y0 + 40 * u,
+          w: (fullW - gap) / 2,
+          h: fullH - 80 * u,
+        };
   [left, right].forEach((side, k) => {
-    const x = safe.x0 + k * (colW + gap);
+    const b = box(k);
     ctx.globalAlpha = s.reveal(t, 0.1 + k * 0.15);
-    ctx.fillStyle = k === 0 ? pal.surface : pal.surface;
-    ctx.fillRect(x, safe.y0 + 40 * u, colW, safe.y1 - safe.y0 - 80 * u);
+    ctx.fillStyle = pal.surface;
+    ctx.fillRect(b.x, b.y, b.w, b.h);
     ctx.fillStyle = k === 0 ? pal.accent2 : pal.accent;
-    ctx.fillRect(x, safe.y0 + 40 * u, colW, 10 * u);
+    ctx.fillRect(b.x, b.y, b.w, 10 * u);
     s.drawText(ctx, side.title, {
-      x: x + 40 * u,
-      y: safe.y0 + 90 * u,
-      width: colW - 80 * u,
+      x: b.x + 40 * u,
+      y: b.y + 40 * u,
+      width: b.w - 80 * u,
       size: Math.round(60 * u),
       minSize: Math.round(40 * u),
       maxLines: 1,
@@ -117,16 +128,17 @@ function compare(ctx, beat, t, assets, env) {
       color: pal.ink,
     });
     ctx.globalAlpha = 1;
+    const rowH = Math.min(150 * u, (b.h - 140 * u) / Math.max(1, side.points.length));
     side.points.forEach((point, i) => {
       const a = s.reveal(t, times[i] ?? 0);
       ctx.save();
       ctx.globalAlpha = a;
       s.drawText(ctx, point, {
-        x: x + 40 * u + (1 - a) * 20 * u,
-        y: safe.y0 + 220 * u + i * 150 * u,
-        width: colW - 80 * u,
+        x: b.x + 40 * u + (1 - a) * 20 * u,
+        y: b.y + 130 * u + i * rowH,
+        width: b.w - 80 * u,
         size: Math.round(46 * u),
-        minSize: Math.round(34 * u),
+        minSize: Math.round(32 * u),
         maxLines: 2,
         font: s.fonts(env).body,
         color: pal.ink,
@@ -285,7 +297,7 @@ function map(ctx, beat, t, assets, env) {
       size: Math.round(34 * u),
       maxLines: 1,
       font: s.fonts(env).display,
-      color: pal.ink,
+      color: '#ffffff',
     });
     ctx.restore();
   });

@@ -9,3 +9,5 @@ __pycache__/
 *.partial.*
 tests/live/out/
 .venv/
+styles/*/preview.mp4
+styles/gallery.html

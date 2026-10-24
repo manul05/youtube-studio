@@ -1,0 +1,69 @@
+{
+  "id": "vertical-captions",
+  "name": "Vertical Captions",
+  "role": "shorts",
+  "bestFor": ["shorts", "vertical", "social"],
+  "mixesWith": ["editorial", "map-doc", "evidence", "kinetic"],
+  "formats": ["short"],
+  "palette": {
+    "bg": "#0d0d12",
+    "surface": "#1c1c26",
+    "ink": "#ffffff",
+    "muted": "#b4b4c2",
+    "accent": "#ffcc00",
+    "accent2": "#4dd2ff"
+  },
+  "fonts": {
+    "display": "SansBold",
+    "body": "Sans",
+    "serif": "Serif",
+    "mono": "Mono",
+    "deva": "Deva"
+  },
+  "captionStyle": {
+    "size": 76,
+    "weight": 800,
+    "bg": "#000000cc",
+    "ink": "#ffffff",
+    "highlight": "#ffcc00"
+  },
+  "motion": {
+    "revealSec": 0.45,
+    "spring": {
+      "stiffness": 120,
+      "damping": 14
+    }
+  },
+  "transition": "cut",
+  "tagCorner": "top-left",
+  "musicMoods": ["energetic", "upbeat"],
+  "imagePromptSuffix": "vivid vertical social-media illustration, single clear subject, no text, 9:16",
+  "stockGrade": {
+    "saturate": 1.05,
+    "contrast": 1.05,
+    "brightness": 1,
+    "tint": "#0d0d12",
+    "tintAlpha": 0.08,
+    "vignette": 0.25,
+    "grain": 0
+  },
+  "fallback": [
+    "art-focus",
+    "art-tour",
+    "stock",
+    "kinetic",
+    "quote",
+    "stat",
+    "compare",
+    "timeline",
+    "map",
+    "document",
+    "list",
+    "chart",
+    "chapter",
+    "endcard"
+  ],
+  "qc": {
+    "changeThreshold": 13
+  }
+}

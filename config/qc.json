@@ -10,7 +10,7 @@
   "wpmBand": 0.1,
   "staticMaxLong": 6,
   "staticMaxShort": 3,
-  "changeThreshold": 8.0,
+  "changeThreshold": 13,
   "captionMaxLines": 2,
   "captionMaxCharsLatin": 42,
   "captionMaxCps": 20,

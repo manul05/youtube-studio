@@ -1,0 +1,183 @@
+{
+  "beats": [
+    {
+      "type": "art-focus",
+      "fields": {
+        "imagePrompt": "demo",
+        "focus": [
+          0.25,
+          0.2,
+          0.4,
+          0.45
+        ]
+      },
+      "illustration": true
+    },
+    {
+      "type": "art-tour",
+      "fields": {
+        "imagePrompt": "demo",
+        "crops": [
+          [
+            0,
+            0,
+            0.45,
+            0.45
+          ],
+          [
+            0.5,
+            0.1,
+            0.45,
+            0.45
+          ],
+          [
+            0.25,
+            0.5,
+            0.45,
+            0.45
+          ]
+        ]
+      },
+      "illustration": true
+    },
+    {
+      "type": "stock",
+      "fields": {
+        "query": "city",
+        "lowerThird": "New Delhi, 6 June 2026"
+      }
+    },
+    {
+      "type": "kinetic",
+      "fields": {
+        "text": "One word changed the conversation"
+      }
+    },
+    {
+      "type": "quote",
+      "fields": {
+        "text": "Every generation needs a voice that refuses to be ignored.",
+        "speaker": "A student organiser",
+        "source": "Example Times",
+        "date": "2026-06-06"
+      }
+    },
+    {
+      "type": "stat",
+      "fields": {
+        "value": 2000000,
+        "label": "people reached in two days",
+        "source": "Example statement"
+      }
+    },
+    {
+      "type": "compare",
+      "fields": {
+        "left": {
+          "title": "Online",
+          "points": [
+            "Millions can share",
+            "Trends in hours"
+          ]
+        },
+        "right": {
+          "title": "Offline",
+          "points": [
+            "Fewer can attend",
+            "Takes weeks"
+          ]
+        }
+      }
+    },
+    {
+      "type": "timeline",
+      "fields": {
+        "events": [
+          {
+            "date": "2026-05-15",
+            "label": "The remark"
+          },
+          {
+            "date": "2026-05-21",
+            "label": "The launch"
+          },
+          {
+            "date": "2026-06-06",
+            "label": "The protest"
+          }
+        ]
+      }
+    },
+    {
+      "type": "map",
+      "fields": {
+        "region": "india",
+        "highlight": [
+          "Delhi"
+        ],
+        "pins": [
+          {
+            "lon": 77.21,
+            "lat": 28.61,
+            "label": "New Delhi"
+          }
+        ]
+      }
+    },
+    {
+      "type": "document",
+      "fields": {
+        "title": "Hearing record",
+        "lines": [
+          "Matter listed for hearing",
+          "Remarks made from the bench"
+        ],
+        "highlight": [
+          1
+        ]
+      }
+    },
+    {
+      "type": "list",
+      "fields": {
+        "items": [
+          "Exams",
+          "Jobs",
+          "A voice"
+        ]
+      }
+    },
+    {
+      "type": "chart",
+      "fields": {
+        "kind": "bar",
+        "series": [
+          {
+            "label": "May",
+            "value": 3
+          },
+          {
+            "label": "June",
+            "value": 9
+          },
+          {
+            "label": "July",
+            "value": 14
+          }
+        ],
+        "source": "Example survey"
+      }
+    },
+    {
+      "type": "chapter",
+      "fields": {
+        "number": 2,
+        "title": "The internet answers back"
+      }
+    },
+    {
+      "type": "endcard",
+      "fields": {}
+    }
+  ]
+}

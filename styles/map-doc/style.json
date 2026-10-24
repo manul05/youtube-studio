@@ -1,0 +1,75 @@
+{
+  "id": "map-doc",
+  "name": "Map Documentary",
+  "role": "main",
+  "bestFor": [
+    "map",
+    "geography",
+    "border",
+    "geopolitics",
+    "route",
+    "history",
+    "war",
+    "travel",
+    "region"
+  ],
+  "mixesWith": ["editorial", "kinetic"],
+  "formats": ["long", "short"],
+  "palette": {
+    "bg": "#0b1c24",
+    "surface": "#143340",
+    "ink": "#e8f1f2",
+    "muted": "#7fa1ab",
+    "accent": "#f28c38",
+    "accent2": "#3fc1c9"
+  },
+  "fonts": {
+    "display": "SansBold",
+    "body": "Sans",
+    "serif": "Serif",
+    "mono": "Mono",
+    "deva": "Deva"
+  },
+  "captionStyle": {
+    "size": 64,
+    "weight": 700,
+    "bg": "#000000b3",
+    "ink": "#ffffff"
+  },
+  "motion": {
+    "revealSec": 0.45,
+    "spring": {
+      "stiffness": 120,
+      "damping": 14
+    }
+  },
+  "transition": "crossfade",
+  "tagCorner": "top-right",
+  "musicMoods": ["documentary", "epic", "tense"],
+  "imagePromptSuffix": "cinematic documentary illustration, cool teal shadows and warm orange light, cartographic details, no text, 16:9",
+  "stockGrade": {
+    "saturate": 0.85,
+    "contrast": 1.1,
+    "brightness": 0.92,
+    "tint": "#0b1c24",
+    "tintAlpha": 0.18,
+    "vignette": 0.4,
+    "grain": 0.04
+  },
+  "fallback": [
+    "art-focus",
+    "art-tour",
+    "stock",
+    "kinetic",
+    "quote",
+    "stat",
+    "compare",
+    "document",
+    "list",
+    "chart",
+    "endcard"
+  ],
+  "qc": {
+    "changeThreshold": 13
+  }
+}

@@ -10,6 +10,7 @@ const ROLES = [
   ['Sans', ['segoeui.ttf', 'arial.ttf']],
   ['SansBold', ['segoeuib.ttf', 'arialbd.ttf']],
   ['Serif', ['georgia.ttf', 'times.ttf']],
+  ['SerifBold', ['georgiab.ttf', 'timesbd.ttf']],
   ['Mono', ['consola.ttf', 'cour.ttf']],
   ['Deva', ['Nirmala.ttc', 'mangal.ttf']],
   ['DevaBold', ['NirmalaB.ttc', 'Nirmala.ttc', 'mangalb.ttf']],

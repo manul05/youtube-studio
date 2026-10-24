@@ -1,0 +1,75 @@
+{
+  "id": "editorial",
+  "name": "Editorial",
+  "role": "main",
+  "bestFor": [
+    "news",
+    "politics",
+    "explainer",
+    "investigation",
+    "journalism",
+    "court",
+    "economy",
+    "policy"
+  ],
+  "mixesWith": ["map-doc", "evidence", "kinetic"],
+  "formats": ["long", "short"],
+  "palette": {
+    "bg": "#f3eee4",
+    "surface": "#e6dfd0",
+    "ink": "#1d1b18",
+    "muted": "#5f584e",
+    "accent": "#c23b22",
+    "accent2": "#24527a"
+  },
+  "fonts": {
+    "display": "SerifBold",
+    "body": "Serif",
+    "serif": "Serif",
+    "mono": "Mono",
+    "deva": "Deva"
+  },
+  "captionStyle": {
+    "size": 64,
+    "weight": 700,
+    "bg": "#000000b3",
+    "ink": "#ffffff"
+  },
+  "motion": {
+    "revealSec": 0.45,
+    "spring": {
+      "stiffness": 120,
+      "damping": 14
+    }
+  },
+  "transition": "crossfade",
+  "tagCorner": "top-left",
+  "musicMoods": ["documentary", "serious", "tense"],
+  "imagePromptSuffix": "editorial newspaper illustration, ink and halftone texture, muted palette with one red accent, strong composition, no text, 16:9",
+  "stockGrade": {
+    "saturate": 0.75,
+    "contrast": 1.08,
+    "brightness": 0.98,
+    "tint": "#f3eee4",
+    "tintAlpha": 0.08,
+    "vignette": 0.25,
+    "grain": 0.06
+  },
+  "fallback": [
+    "art-focus",
+    "art-tour",
+    "stock",
+    "kinetic",
+    "quote",
+    "compare",
+    "timeline",
+    "map",
+    "document",
+    "list",
+    "chart",
+    "endcard"
+  ],
+  "qc": {
+    "changeThreshold": 17.19
+  }
+}

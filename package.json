@@ -27,7 +27,11 @@
     "align": "node tools/studio.cjs align",
     "voice:check": "node tools/studio.cjs voice:check",
     "plan": "node tools/studio.cjs plan",
-    "beats": "node tools/studio.cjs beats"
+    "beats": "node tools/studio.cjs beats",
+    "style:check": "node tools/studio.cjs style:check",
+    "style:preview": "node tools/studio.cjs style:preview",
+    "styles": "node tools/studio.cjs styles",
+    "style:suggest": "node tools/studio.cjs style:suggest"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

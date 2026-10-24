@@ -19,7 +19,11 @@
     "brief:check": "node tools/studio.cjs brief:check",
     "research:check": "node tools/studio.cjs research:check",
     "outline:check": "node tools/studio.cjs outline:check",
-    "script:check": "node tools/studio.cjs script:check"
+    "script:check": "node tools/studio.cjs script:check",
+    "voice:sample": "node tools/studio.cjs voice:sample",
+    "voice": "node tools/studio.cjs voice",
+    "voice:retake": "node tools/studio.cjs voice:retake",
+    "test:live": "node --test \"tests/live/*.live.cjs\""
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

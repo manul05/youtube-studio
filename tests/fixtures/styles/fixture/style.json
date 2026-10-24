@@ -1,0 +1,23 @@
+{
+  "id": "fixture",
+  "name": "Test fixture",
+  "bestFor": ["test"],
+  "mixesWith": [],
+  "formats": ["long", "short"],
+  "palette": {
+    "bg": "#101418",
+    "surface": "#1c232a",
+    "ink": "#f4f1ea",
+    "muted": "#9aa4ad",
+    "accent": "#e2553d",
+    "accent2": "#3d9be2"
+  },
+  "fonts": { "display": "SansBold", "body": "Sans", "mono": "Mono", "deva": "Deva" },
+  "captionStyle": { "size": 64, "weight": 700, "bg": "#000000cc", "ink": "#ffffff" },
+  "motion": { "revealSec": 0.5, "spring": { "stiffness": 120, "damping": 14 } },
+  "transition": "crossfade",
+  "musicMoods": ["neutral"],
+  "imagePromptSuffix": "flat test colours",
+  "stockGrade": { "matrix": [1, 0, 0, 0, 1, 0, 0, 0, 1], "vignette": 0, "grain": 0 },
+  "qc": {}
+}

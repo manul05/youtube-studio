@@ -1,0 +1,6 @@
+node_modules/
+.superpowers/
+docs/
+projects/
+*.md
+package-lock.json

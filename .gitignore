@@ -1,1 +1,9 @@
 .superpowers/
+node_modules/
+.env
+projects/*/work/
+projects/*/assets/stock/_incoming/
+config/local.json
+config/pin.json
+__pycache__/
+*.partial.*

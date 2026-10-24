@@ -1,0 +1,21 @@
+{
+  "name": "claude-youtube-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Topic-, style- and language-agnostic YouTube production pipeline with enforced quality gates.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.cjs\"",
+    "format": "prettier --write .",
+    "lint": "prettier --check .",
+    "help": "node tools/studio.cjs help"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "0.1.100"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

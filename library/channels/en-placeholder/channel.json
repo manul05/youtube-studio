@@ -1,0 +1,14 @@
+{
+  "id": "en-placeholder",
+  "name": "English Channel (placeholder)",
+  "handle": "@your-english-channel",
+  "language": "en",
+  "captionScript": "latin",
+  "voice": {
+    "name": "Charon",
+    "style": "Calm, confident documentary narrator; clear and unhurried."
+  },
+  "musicMoods": ["documentary", "tense", "hopeful"],
+  "wpm": null,
+  "placeholder": true
+}

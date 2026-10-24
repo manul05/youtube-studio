@@ -1,0 +1,14 @@
+{
+  "id": "hi-placeholder",
+  "name": "Hindi Channel (placeholder)",
+  "handle": "@your-hindi-channel",
+  "language": "hi",
+  "captionScript": "deva",
+  "voice": {
+    "name": "Charon",
+    "style": "Warm, confident Hindi news explainer; natural conversational pace."
+  },
+  "musicMoods": ["documentary", "tense", "hopeful"],
+  "wpm": null,
+  "placeholder": true
+}

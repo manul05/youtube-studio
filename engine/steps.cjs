@@ -124,6 +124,8 @@ const STEPS = [
     'outputs/shorts/*',
     'outputs/package/*',
     'outputs/score/owner.json',
+    'outputs/score/ai.json',
+    'outputs/score/score.json',
   ]),
   step('release', 'release', '14-release', ['outputs/score/score.json'], ['outputs/release/**']),
 ];

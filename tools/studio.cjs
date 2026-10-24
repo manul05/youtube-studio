@@ -40,7 +40,58 @@ const COMMANDS = {
       return 0;
     },
   },
+  'pin:set': {
+    summary: 'Owner only: choose the review PIN (--reset replaces it and voids approvals).',
+    run: async ({ flags }) => {
+      requireOwnerTerminal('pin:set');
+      const { setPin } = require('../engine/review/pin.cjs');
+      const pin = await askHidden('Choose a PIN (at least 6 digits): ');
+      const again = await askHidden('Type it again: ');
+      if (pin !== again) throw new Error('The two PINs did not match. Nothing was saved.');
+      setPin(pin, { reset: Boolean(flags.reset) });
+      console.log('PIN saved. Agents cannot approve review stops without it.');
+      return 0;
+    },
+  },
+  review: {
+    summary: 'Open the local review pages for a project (stops 1–5).',
+    run: async ({ positional, flags }) => {
+      const project = requireProject(positional);
+      require('../engine/review/register-pages.cjs');
+      const { startServer } = require('../engine/review/server.cjs');
+      const server = await startServer(project, { port: Number(flags.port) || 8770 });
+      console.log(`Review pages for ${project.name}: ${server.url}`);
+      console.log('Leave this running while you review. Press Ctrl+C to stop.');
+      await new Promise(() => {});
+    },
+  },
 };
+
+/** Ask a question in the terminal without echoing the answer (for the PIN). */
+function askHidden(question) {
+  const readline = require('node:readline');
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: true,
+    });
+    rl._writeToOutput = (text) => {
+      if (text.includes(question)) process.stdout.write(question);
+    };
+    rl.question(question, (answer) => {
+      rl.close();
+      process.stdout.write('\n');
+      resolve(answer.trim());
+    });
+  });
+}
+
+function requireOwnerTerminal(command) {
+  if (!process.stdin.isTTY) {
+    throw new Error(`${command} must be typed by the owner in an interactive terminal.`);
+  }
+}
 
 function requireProject(positional) {
   const { openProject } = require('../engine/project.cjs');

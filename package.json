@@ -12,7 +12,9 @@
     "lint": "prettier --check .",
     "help": "node tools/studio.cjs help",
     "doctor": "node tools/studio.cjs doctor",
-    "next": "node tools/studio.cjs next"
+    "next": "node tools/studio.cjs next",
+    "pin:set": "node tools/studio.cjs pin:set",
+    "review": "node tools/studio.cjs review"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

@@ -37,15 +37,19 @@ function escapeRegex(text) {
 
 /**
  * Hash files with a per-project cache keyed by size and modification time, so large media
- * (a 900 MB master) is not re-read on every `next` call.
+ * (a 900 MB master) is not re-read on every `next` call. The cache is only a speed hint for
+ * routing: anything that grants trust (writing or verifying approvals, release) passes
+ * { useCache: false } so every file is read by content.
  */
-function hasher(project) {
+function hasher(project, { useCache = true } = {}) {
   const cacheFile = project.path('work', 'stamps', '.hashcache.json');
   let cache = {};
-  try {
-    cache = readJson(cacheFile);
-  } catch {
-    cache = {};
+  if (useCache) {
+    try {
+      cache = readJson(cacheFile);
+    } catch {
+      cache = {};
+    }
   }
   let dirty = false;
   const hash = (rel) => {
@@ -60,7 +64,7 @@ function hasher(project) {
     return sha;
   };
   const save = () => {
-    if (dirty) writeJson(cacheFile, cache);
+    if (dirty && useCache) writeJson(cacheFile, cache);
   };
   return { hash, save };
 }

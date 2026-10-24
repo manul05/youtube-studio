@@ -1,0 +1,187 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const http = require('node:http');
+const { STEPS, findStep } = require('../steps.cjs');
+const { evaluate, nextAction } = require('../next.cjs');
+const { deriveKey } = require('./pin.cjs');
+const { writeApproval } = require('./approvals.cjs');
+const { pageData } = require('./pages.cjs');
+
+const PAGES_DIR = path.join(__dirname, 'pages');
+const MAX_BODY = 1024 * 1024;
+const TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
+  '.srt': 'text/plain; charset=utf-8',
+  '.vtt': 'text/vtt; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
+};
+
+function send(res, status, body, type = 'text/plain; charset=utf-8') {
+  res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
+  res.end(body);
+}
+
+function sendJson(res, status, value) {
+  send(res, status, JSON.stringify(value), TYPES['.json']);
+}
+
+/** JSON safe to embed inside a <script> element. */
+function embed(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > MAX_BODY) {
+        reject(new Error('Request body too large.'));
+        req.destroy();
+      } else {
+        chunks.push(chunk);
+      }
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('error', reject);
+  });
+}
+
+/** Serve a project file, refusing paths outside the project; supports byte ranges for video. */
+function serveProjectFile(project, rel, req, res) {
+  const abs = path.resolve(project.dir, rel || '');
+  const inside = path.relative(project.dir, abs);
+  if (!rel || inside.startsWith('..') || path.isAbsolute(inside) || !fs.existsSync(abs)) {
+    return send(res, 404, 'Not found');
+  }
+  const stat = fs.statSync(abs);
+  if (!stat.isFile()) return send(res, 404, 'Not found');
+  const type = TYPES[path.extname(abs).toLowerCase()] || 'application/octet-stream';
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+  if (range) {
+    const start = range[1] ? Number(range[1]) : 0;
+    const end = range[2] ? Math.min(Number(range[2]), stat.size - 1) : stat.size - 1;
+    if (start > end || start >= stat.size) {
+      res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` });
+      return res.end();
+    }
+    res.writeHead(206, {
+      'Content-Type': type,
+      'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': end - start + 1,
+    });
+    return fs.createReadStream(abs, { start, end }).pipe(res);
+  }
+  res.writeHead(200, {
+    'Content-Type': type,
+    'Content-Length': stat.size,
+    'Accept-Ranges': 'bytes',
+  });
+  return fs.createReadStream(abs).pipe(res);
+}
+
+function indexPage(project) {
+  const rows = evaluate(project)
+    .filter((r) => findStep(r.id).kind === 'gate')
+    .map((r) => `<li><a href="/gate/${encodeURIComponent(r.id)}">${r.id}</a> — ${r.state}</li>`)
+    .join('\n');
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Review — ${project.name}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="font-family:system-ui;max-width:760px;margin:40px auto;padding:0 16px">
+<h1>Review stops for ${project.name}</h1><ul>${rows}</ul></body></html>`;
+}
+
+function gatePage(project, gateId) {
+  const layout = fs.readFileSync(path.join(PAGES_DIR, 'layout.html'), 'utf8');
+  const data = { gate: gateId, project: project.name, ...pageData(project, gateId) };
+  // A function replacement so "$" sequences in the data are never treated as patterns.
+  return layout.replace(/\/\*GATE_DATA\*\/\s*null/, () => embed(data));
+}
+
+async function handleApproval(project, gateId, req, res, pinFile) {
+  let body;
+  try {
+    body = JSON.parse(await readBody(req));
+  } catch (err) {
+    return sendJson(res, 400, { error: `Bad request: ${err.message}` });
+  }
+  let key;
+  try {
+    key = deriveKey(body.pin, { pinFile });
+  } catch (err) {
+    return sendJson(res, 401, { error: err.message });
+  }
+  const current = nextAction(project).stepId;
+  if (current !== gateId) {
+    return sendJson(res, 409, {
+      error: `This stop is not ready. The next step is "${current}".`,
+    });
+  }
+  const approval = writeApproval(project, gateId, key, {
+    decision: body.decision,
+    notes: String(body.notes || ''),
+    extra: body.extra && typeof body.extra === 'object' ? body.extra : {},
+    pinFile,
+  });
+  return sendJson(res, 200, { ok: true, decision: approval.decision, at: approval.at });
+}
+
+/** Start the loopback-only review server. Resolves to { url, port, close() }. */
+function startServer(project, { port = 8770, pinFile } = {}) {
+  let allowedHosts = [];
+  const server = http.createServer(async (req, res) => {
+    try {
+      if (!allowedHosts.includes(req.headers.host)) return send(res, 403, 'Forbidden host');
+      if (req.headers.origin && !allowedHosts.some((h) => req.headers.origin === `http://${h}`)) {
+        return send(res, 403, 'Forbidden origin');
+      }
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      if (req.method === 'GET' && url.pathname === '/') {
+        return send(res, 200, indexPage(project), TYPES['.html']);
+      }
+      if (req.method === 'GET' && url.pathname === '/gate.js') {
+        return send(res, 200, fs.readFileSync(path.join(PAGES_DIR, 'gate.js')), TYPES['.js']);
+      }
+      if (req.method === 'GET' && url.pathname === '/file') {
+        return serveProjectFile(project, url.searchParams.get('path'), req, res);
+      }
+      const match = /^\/gate\/([^/]+)$/.exec(url.pathname);
+      if (match) {
+        const gateId = decodeURIComponent(match[1]);
+        const entry = STEPS.find((s) => s.id === gateId && s.kind === 'gate');
+        if (!entry) return send(res, 404, 'Unknown review stop');
+        if (req.method === 'GET') return send(res, 200, gatePage(project, gateId), TYPES['.html']);
+        if (req.method === 'POST') return handleApproval(project, gateId, req, res, pinFile);
+      }
+      return send(res, 404, 'Not found');
+    } catch (err) {
+      return send(res, 500, `Server error: ${err.message}`);
+    }
+  });
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => {
+      const actual = server.address().port;
+      allowedHosts = [`127.0.0.1:${actual}`, `localhost:${actual}`];
+      resolve({
+        url: `http://127.0.0.1:${actual}`,
+        port: actual,
+        close: () => new Promise((done) => server.close(() => done())),
+      });
+    });
+  });
+}
+
+module.exports = { startServer };

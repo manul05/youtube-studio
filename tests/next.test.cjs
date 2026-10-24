@@ -119,3 +119,10 @@ test('the next command prints the next action for a project path', async () => {
   assert.match(text, /npm run brief:check -- /);
   assert.match(text, /docs\/steps\/01-idea\.md/);
 });
+
+test('the final review covers the AI review and score files', () => {
+  const { findStep } = require('../engine/steps.cjs');
+  const covers = findStep('gate:final').covers();
+  assert.ok(covers.includes('outputs/score/ai.json'));
+  assert.ok(covers.includes('outputs/score/score.json'));
+});

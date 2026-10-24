@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Review stop</title>
+    <style>
+      :root {
+        --bg: #f6f4ee;
+        --surface: #ffffff;
+        --ink: #1b1f1d;
+        --muted: #5d6661;
+        --accent: #b8452e;
+        --ok: #2f6b4f;
+        --line: #dcd8cd;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #141615;
+          --surface: #1d201f;
+          --ink: #ecebe6;
+          --muted: #a3aaa6;
+          --accent: #e0775f;
+          --ok: #7cc49c;
+          --line: #333836;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.55 'Segoe UI',
+          'Nirmala UI',
+          system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 24px 16px 120px;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 8px 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 28px 0 8px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 10px 0;
+      }
+      .flag {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .grid img {
+        width: 100%;
+        border-radius: 6px;
+        display: block;
+      }
+      video,
+      img.wide {
+        width: 100%;
+        border-radius: 8px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      td,
+      th {
+        border-bottom: 1px solid var(--line);
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      form {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--surface);
+        border-top: 1px solid var(--line);
+        padding: 12px 16px;
+      }
+      form .row {
+        max-width: 980px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      input,
+      textarea,
+      button {
+        font: inherit;
+      }
+      textarea {
+        flex: 1 1 320px;
+        min-height: 40px;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 16px;
+        cursor: pointer;
+        color: #fff;
+      }
+      button.approve {
+        background: var(--ok);
+      }
+      button.changes {
+        background: var(--accent);
+      }
+      #status {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app"></main>
+    <form id="decision">
+      <div class="row">
+        <textarea id="notes" placeholder="Notes or requested changes"></textarea>
+        <input id="pin" type="password" inputmode="numeric" placeholder="Your PIN" size="10" />
+        <button type="button" class="approve" data-decision="approve">Approve</button>
+        <button type="button" class="changes" data-decision="changes">Request changes</button>
+        <div id="status" class="muted"></div>
+      </div>
+    </form>
+    <script>
+      window.GATE = /*GATE_DATA*/ null;
+    </script>
+    <script src="/gate.js"></script>
+  </body>
+</html>

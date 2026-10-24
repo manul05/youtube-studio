@@ -11,19 +11,11 @@ const { pageData } = require('./pages.cjs');
 
 const PAGES_DIR = path.join(__dirname, 'pages');
 const MAX_BODY = 1024 * 1024;
+// Types for the server's own pages only (never for project files).
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.wav': 'audio/wav',
-  '.mp3': 'audio/mpeg',
-  '.mp4': 'video/mp4',
-  '.srt': 'text/plain; charset=utf-8',
-  '.vtt': 'text/vtt; charset=utf-8',
-  '.txt': 'text/plain; charset=utf-8',
 };
 
 function send(res, status, body, type = 'text/plain; charset=utf-8') {
@@ -58,35 +50,62 @@ function readBody(req) {
   });
 }
 
-/** Serve a project file, refusing paths outside the project; supports byte ranges for video. */
+// Project files are agent-written, so only passive media and plain text are ever served.
+const MEDIA_TYPES = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
+  '.srt': 'text/plain; charset=utf-8',
+  '.vtt': 'text/vtt; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
+};
+const FILE_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'Content-Security-Policy': "sandbox; default-src 'none'",
+  'Cache-Control': 'no-store',
+};
+
+/** Resolve a project-relative path, following symlinks, and refuse anything outside it. */
+function containedPath(project, rel) {
+  if (!rel) return null;
+  const abs = path.resolve(project.dir, rel);
+  if (!fs.existsSync(abs)) return null;
+  const real = fs.realpathSync(abs);
+  const inside = path.relative(fs.realpathSync(project.dir), real);
+  if (inside.startsWith('..') || path.isAbsolute(inside)) return null;
+  return fs.statSync(real).isFile() ? real : null;
+}
+
+/** Serve one media file from the project; supports byte ranges for video seeking. */
 function serveProjectFile(project, rel, req, res) {
-  const abs = path.resolve(project.dir, rel || '');
-  const inside = path.relative(project.dir, abs);
-  if (!rel || inside.startsWith('..') || path.isAbsolute(inside) || !fs.existsSync(abs)) {
-    return send(res, 404, 'Not found');
-  }
-  const stat = fs.statSync(abs);
-  if (!stat.isFile()) return send(res, 404, 'Not found');
-  const type = TYPES[path.extname(abs).toLowerCase()] || 'application/octet-stream';
+  const abs = containedPath(project, rel);
+  const type = abs && MEDIA_TYPES[path.extname(abs).toLowerCase()];
+  if (!type) return send(res, 404, 'Not found');
+  const size = fs.statSync(abs).size;
   const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
   if (range) {
     const start = range[1] ? Number(range[1]) : 0;
-    const end = range[2] ? Math.min(Number(range[2]), stat.size - 1) : stat.size - 1;
-    if (start > end || start >= stat.size) {
-      res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` });
+    const end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+    if (start > end || start >= size) {
+      res.writeHead(416, { ...FILE_HEADERS, 'Content-Range': `bytes */${size}` });
       return res.end();
     }
     res.writeHead(206, {
+      ...FILE_HEADERS,
       'Content-Type': type,
-      'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+      'Content-Range': `bytes ${start}-${end}/${size}`,
       'Accept-Ranges': 'bytes',
       'Content-Length': end - start + 1,
     });
     return fs.createReadStream(abs, { start, end }).pipe(res);
   }
   res.writeHead(200, {
+    ...FILE_HEADERS,
     'Content-Type': type,
-    'Content-Length': stat.size,
+    'Content-Length': size,
     'Accept-Ranges': 'bytes',
   });
   return fs.createReadStream(abs).pipe(res);

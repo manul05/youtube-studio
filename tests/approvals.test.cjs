@@ -160,3 +160,27 @@ test('a review page embeds its data safely', async () => {
     await server.close();
   }
 });
+
+test('the file route serves media only, with sandboxing headers', async () => {
+  const project = tempProject();
+  fs.writeFileSync(project.path('evil.html'), '<script>alert(1)</script>');
+  fs.writeFileSync(project.path('still.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  const server = await startServer(project, { port: 0, pinFile: tempPinFile() });
+  try {
+    for (const rel of ['evil.html', 'brief.json']) {
+      const res = await request(`${server.url}/file?path=${rel}`);
+      assert.equal(res.status, 404, `${rel} is not served`);
+    }
+    const png = await new Promise((resolve) =>
+      http.get(`${server.url}/file?path=still.png`, (res) => {
+        res.resume();
+        resolve(res);
+      }),
+    );
+    assert.equal(png.statusCode, 200);
+    assert.equal(png.headers['x-content-type-options'], 'nosniff');
+    assert.match(png.headers['content-security-policy'], /sandbox/);
+  } finally {
+    await server.close();
+  }
+});

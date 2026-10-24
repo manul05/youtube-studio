@@ -99,6 +99,8 @@ function requireProject(positional) {
   return openProject(positional[0]);
 }
 
+Object.assign(COMMANDS, require('../engine/words/commands.cjs').COMMANDS);
+
 function printHelp() {
   console.log('Studio commands (run with: npm run <command> -- [project] [--flags])\n');
   for (const [name, command] of Object.entries(COMMANDS)) {

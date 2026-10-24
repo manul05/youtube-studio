@@ -14,7 +14,12 @@
     "doctor": "node tools/studio.cjs doctor",
     "next": "node tools/studio.cjs next",
     "pin:set": "node tools/studio.cjs pin:set",
-    "review": "node tools/studio.cjs review"
+    "review": "node tools/studio.cjs review",
+    "new": "node tools/studio.cjs new",
+    "brief:check": "node tools/studio.cjs brief:check",
+    "research:check": "node tools/studio.cjs research:check",
+    "outline:check": "node tools/studio.cjs outline:check",
+    "script:check": "node tools/studio.cjs script:check"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

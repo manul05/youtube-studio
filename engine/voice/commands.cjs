@@ -32,6 +32,11 @@ const COMMANDS = {
       const project = projectFrom(positional);
       const result = await synthesizeSample(project);
       if (result.rateLimited) return rateLimited(project, 'voice:sample', result.retryAfterSec);
+      try {
+        await require('../align/sample.cjs').alignSample(project);
+      } catch (err) {
+        console.log(`Note: could not time names/hooks for the review page (${err.message}).`);
+      }
       writeStamp(project, 'voice-sample');
       console.log(`Voice sample ready. Review it at stop 3: npm run review -- ${project.name}`);
       return 0;

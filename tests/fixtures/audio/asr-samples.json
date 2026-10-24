@@ -1,0 +1,227 @@
+{
+  "en": {
+    "text": "On the fifteenth of May, Chief Justice Surya Kant made a remark that a million young Indians would not forget.",
+    "asr": [
+      {
+        "text": "On",
+        "start": 0,
+        "end": 0.3
+      },
+      {
+        "text": "the",
+        "start": 0.3,
+        "end": 0.42
+      },
+      {
+        "text": "15th",
+        "start": 0.42,
+        "end": 0.9
+      },
+      {
+        "text": "of",
+        "start": 0.9,
+        "end": 0.98
+      },
+      {
+        "text": "May,",
+        "start": 0.98,
+        "end": 1.2
+      },
+      {
+        "text": "Chief",
+        "start": 1.52,
+        "end": 1.64
+      },
+      {
+        "text": "Justice",
+        "start": 1.64,
+        "end": 2
+      },
+      {
+        "text": "Surya",
+        "start": 2,
+        "end": 2.48
+      },
+      {
+        "text": "Kant",
+        "start": 2.48,
+        "end": 2.7
+      },
+      {
+        "text": "made",
+        "start": 2.7,
+        "end": 2.94
+      },
+      {
+        "text": "a",
+        "start": 2.94,
+        "end": 3.06
+      },
+      {
+        "text": "remark",
+        "start": 3.06,
+        "end": 3.4
+      },
+      {
+        "text": "that",
+        "start": 3.4,
+        "end": 3.62
+      },
+      {
+        "text": "a",
+        "start": 3.62,
+        "end": 3.74
+      },
+      {
+        "text": "million",
+        "start": 3.74,
+        "end": 3.94
+      },
+      {
+        "text": "young",
+        "start": 3.94,
+        "end": 4.22
+      },
+      {
+        "text": "Indians",
+        "start": 4.22,
+        "end": 4.52
+      },
+      {
+        "text": "would",
+        "start": 4.52,
+        "end": 4.8
+      },
+      {
+        "text": "not",
+        "start": 4.8,
+        "end": 4.98
+      },
+      {
+        "text": "forget.",
+        "start": 4.98,
+        "end": 5.34
+      }
+    ]
+  },
+  "hi": {
+    "text": "पंद्रह मई को मुख्य न्यायाधीश सूर्य कांत ने एक टिप्पणी की, जिसे लाखों युवा भारतीय नहीं भूलेंगे। कॉकरोच जनता पार्टी इसी से पैदा हुई।",
+    "asr": [
+      {
+        "text": "पन्द्रा",
+        "start": 0,
+        "end": 0.52
+      },
+      {
+        "text": "मैई",
+        "start": 0.52,
+        "end": 0.86
+      },
+      {
+        "text": "को",
+        "start": 0.86,
+        "end": 1.02
+      },
+      {
+        "text": "मुख्य",
+        "start": 1.02,
+        "end": 1.42
+      },
+      {
+        "text": "न्यायादिष",
+        "start": 1.42,
+        "end": 2.18
+      },
+      {
+        "text": "सूर्यकान्त",
+        "start": 2.18,
+        "end": 3.02
+      },
+      {
+        "text": "ने",
+        "start": 3.02,
+        "end": 3.26
+      },
+      {
+        "text": "एक",
+        "start": 3.26,
+        "end": 3.54
+      },
+      {
+        "text": "तिप्पनी",
+        "start": 3.54,
+        "end": 4.04
+      },
+      {
+        "text": "की,",
+        "start": 4.04,
+        "end": 4.3
+      },
+      {
+        "text": "जिसे",
+        "start": 4.58,
+        "end": 4.86
+      },
+      {
+        "text": "लाखो",
+        "start": 4.86,
+        "end": 5.3
+      },
+      {
+        "text": "युवा",
+        "start": 5.3,
+        "end": 5.64
+      },
+      {
+        "text": "भार्तिया",
+        "start": 5.64,
+        "end": 6.22
+      },
+      {
+        "text": "नहीं",
+        "start": 6.22,
+        "end": 6.52
+      },
+      {
+        "text": "भूलेंगे.",
+        "start": 6.52,
+        "end": 7.08
+      },
+      {
+        "text": "कोक्रोच",
+        "start": 8.1,
+        "end": 8.64
+      },
+      {
+        "text": "जंता",
+        "start": 8.64,
+        "end": 9.1
+      },
+      {
+        "text": "पार्टी",
+        "start": 9.1,
+        "end": 9.54
+      },
+      {
+        "text": "इसी",
+        "start": 9.54,
+        "end": 9.9
+      },
+      {
+        "text": "से",
+        "start": 9.9,
+        "end": 10.12
+      },
+      {
+        "text": "पैदा",
+        "start": 10.12,
+        "end": 10.48
+      },
+      {
+        "text": "हुई.",
+        "start": 10.48,
+        "end": 10.76
+      }
+    ]
+  }
+}

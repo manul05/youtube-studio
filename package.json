@@ -31,7 +31,12 @@
     "style:check": "node tools/studio.cjs style:check",
     "style:preview": "node tools/studio.cjs style:preview",
     "styles": "node tools/studio.cjs styles",
-    "style:suggest": "node tools/studio.cjs style:suggest"
+    "style:suggest": "node tools/studio.cjs style:suggest",
+    "images:prompts": "node tools/studio.cjs images:prompts",
+    "images:record": "node tools/studio.cjs images:record",
+    "images:check": "node tools/studio.cjs images:check",
+    "stock:search": "node tools/studio.cjs stock:search",
+    "stock:pick": "node tools/studio.cjs stock:pick"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

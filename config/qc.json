@@ -2,11 +2,14 @@
   "lufsTarget": -14,
   "lufsMin": -15,
   "lufsMax": -13,
-  "truePeakMax": -1.0,
+  "truePeakMax": -1,
   "voiceToMusicMinDb": 15,
   "silenceHardFail": 1.2,
   "silenceInParagraphFlag": 0.6,
-  "wpmEnglish": [145, 165],
+  "wpmEnglish": [
+    145,
+    165
+  ],
   "wpmBand": 0.1,
   "staticMaxLong": 6,
   "staticMaxShort": 3,
@@ -18,7 +21,7 @@
   "captionTimingTolerance": 0.1,
   "bottomSafeFraction": 0.12,
   "alignMaxInterpolated": 0.05,
-  "imageMinLongEdge": 1920,
+  "imageMinLongEdge": 1344,
   "titleMaxChars": 60,
   "thumbMaxWords": 4,
   "thumbMinTextHeight": 0.18,
@@ -26,5 +29,6 @@
   "thumbMaxEdgeDensity": 0.2,
   "releaseMin": 95,
   "categoryFloor": 0.8,
-  "hardFailCap": 59
+  "hardFailCap": 59,
+  "imageMinCropWidth": 960
 }

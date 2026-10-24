@@ -316,4 +316,4 @@ if (require.main === module) {
   );
 }
 
-module.exports = { renderChapter, hashTree };
+module.exports = { renderChapter, hashTree, loadBeatAssets, beatWords };

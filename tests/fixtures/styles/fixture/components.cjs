@@ -20,4 +20,10 @@ function flat(ctx, beat, t, assets, env) {
   }
 }
 
-module.exports = { 'art-focus': flat, kinetic: flat, endcard: flat, chapter: flat };
+/** Deliberately draws text in the unsafe bottom strip, to test layout failures. */
+function unsafe(ctx, beat, t, assets, env) {
+  flat(ctx, beat, t, assets, env);
+  drawText(ctx, 'Too low', { x: 100, y: env.height - 40, width: 400, size: 30 });
+}
+
+module.exports = { 'art-focus': flat, kinetic: flat, endcard: flat, chapter: flat, list: unsafe };

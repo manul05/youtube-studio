@@ -4,3 +4,4 @@
 // Later tasks append their page modules here.
 require('../words/pages.cjs');
 require('../voice/pages.cjs');
+require('../render/pages.cjs');

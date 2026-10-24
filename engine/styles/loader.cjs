@@ -40,8 +40,9 @@ function loadStyle(id) {
   const dir = packDir(id);
   const meta = readJson(path.join(dir, 'style.json'));
   const components = id !== 'base' && packExists('base') ? { ...loadStyle('base').components } : {};
-  const own = path.join(dir, 'components.cjs');
-  if (fs.existsSync(own)) Object.assign(components, require(own));
+  for (const own of [path.join(dir, 'components.cjs'), path.join(dir, 'components', 'index.cjs')]) {
+    if (fs.existsSync(own)) Object.assign(components, require(own));
+  }
   const style = { id, dir, meta, components };
   cache.set(id, style);
   return style;

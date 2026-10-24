@@ -1,0 +1,38 @@
+{
+  "id": "base",
+  "name": "Base",
+  "bestFor": ["explainer", "news", "general"],
+  "mixesWith": [],
+  "formats": ["long", "short"],
+  "palette": {
+    "bg": "#0f1418",
+    "surface": "#1a2228",
+    "ink": "#f3efe6",
+    "muted": "#9aa6ad",
+    "accent": "#e8553e",
+    "accent2": "#46a6d8"
+  },
+  "fonts": {
+    "display": "SansBold",
+    "body": "Sans",
+    "serif": "Serif",
+    "mono": "Mono",
+    "deva": "Deva"
+  },
+  "captionStyle": { "size": 64, "weight": 700, "bg": "#000000b3", "ink": "#ffffff" },
+  "motion": { "revealSec": 0.45, "spring": { "stiffness": 120, "damping": 14 } },
+  "transition": "crossfade",
+  "tagCorner": "top-right",
+  "musicMoods": ["documentary", "neutral"],
+  "imagePromptSuffix": "cinematic editorial illustration, rich detail, clear focal subject, no text, 16:9",
+  "stockGrade": {
+    "saturate": 0.9,
+    "contrast": 1.05,
+    "brightness": 0.95,
+    "tint": "#0f1418",
+    "tintAlpha": 0.12,
+    "vignette": 0.35,
+    "grain": 0
+  },
+  "qc": {}
+}

@@ -136,11 +136,11 @@ test('a chapter renders to an MP4 with exactly the planned frames, then caches',
 test('a render that fails part-way stops the encoder and leaves no partial file', async () => {
   const project = chapterProject();
   const plan = JSON.parse(fs.readFileSync(project.path('beats.json'), 'utf8'));
-  plan.beats[1].type = 'stat'; // the fixture pack cannot draw this
+  plan.beats[1].type = 'hologram'; // no pack can draw this
   fs.writeFileSync(project.path('beats.json'), JSON.stringify(plan));
   await assert.rejects(
     () => renderChapter(project, 1, { format: 'long', inProcess: true }),
-    /cannot draw beat type "stat"/,
+    /cannot draw beat type "hologram"/,
   );
   const dir = project.path('work', 'render', 'long');
   assert.deepEqual(

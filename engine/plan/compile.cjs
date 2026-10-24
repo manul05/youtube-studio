@@ -126,7 +126,7 @@ function compilePlan(project, { format = 'long' } = {}) {
   });
 
   const { width, height } = FORMATS[format];
-  return { format, fps: FPS, width, height, frames: frame, chapters, paragraphs, beats, script };
+  return { format, fps: FPS, width, height, frames: frame, chapters, paragraphs, beats };
 }
 
 /** Every reason the compiled plan cannot be rendered as specified. */

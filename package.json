@@ -25,7 +25,9 @@
     "voice:retake": "node tools/studio.cjs voice:retake",
     "test:live": "node --test \"tests/live/*.live.cjs\"",
     "align": "node tools/studio.cjs align",
-    "voice:check": "node tools/studio.cjs voice:check"
+    "voice:check": "node tools/studio.cjs voice:check",
+    "plan": "node tools/studio.cjs plan",
+    "beats": "node tools/studio.cjs beats"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

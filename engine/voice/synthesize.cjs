@@ -11,7 +11,6 @@ const { tts, RateLimited } = require('./gemini.cjs');
 
 const SAMPLE_INTRO_WORDS = 110;
 
-
 /** "c03" for chapter 3. Ids come from agent-written JSON, so they are validated before use. */
 function chapterId(chapter) {
   const n = Number(chapter.id);

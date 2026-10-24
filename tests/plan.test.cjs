@@ -158,3 +158,22 @@ test('every beat type documents its fields and limits', () => {
     if (!spec.internalReveals) assert.ok(spec.maxSec <= 6, `${type} without reveals is ≤ 6 s`);
   }
 });
+
+test('the plan command writes beats.json and stamps the step when the plan is clean', async () => {
+  const { main } = require('../tools/studio.cjs');
+  const project = projectWith([
+    { words: 10, step: 0.4, beats: [{ type: 'art-focus', atWord: 0, ...focus }] },
+  ]);
+  fs.writeFileSync(project.path('research.json'), JSON.stringify(research));
+  const quiet = console.log;
+  console.log = () => {};
+  try {
+    assert.equal(await main(['plan', project.dir]), 0);
+  } finally {
+    console.log = quiet;
+  }
+  const beats = JSON.parse(fs.readFileSync(project.path('beats.json'), 'utf8'));
+  assert.equal(beats.beats[0].id, 'c01p01b0');
+  assert.ok(!('script' in beats), 'the script is not copied into beats.json');
+  assert.ok(fs.existsSync(project.path('work', 'stamps', 'plan.json')));
+});

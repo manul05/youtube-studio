@@ -43,7 +43,7 @@ test('doctor reports a malformed config/local.json instead of crashing', async (
   const { rootPath } = require('../engine/util/files.cjs');
   const local = rootPath('config', 'local.json');
   const backup = fs.existsSync(local) ? fs.readFileSync(local) : null;
-  fs.writeFileSync(local, '{ "python": "C:\\bad" }');
+  fs.writeFileSync(local, '{ "python": "C:\\Users\\x" }'); // "\U" is an invalid JSON escape
   try {
     const report = await doctor({ fetch: async () => ({ ok: false, status: 401 }), env: {} });
     const py = report.checks.find((c) => c.name === 'python-faster-whisper');

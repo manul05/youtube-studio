@@ -1,7 +1,7 @@
 'use strict';
 
 const { spawnSync } = require('node:child_process');
-const { loadEnv, models, saveModels } = require('./config.cjs');
+const { ENV_KEYS, loadEnv, models, saveModels } = require('./config.cjs');
 const { ffmpegPath, ffprobePath, pythonPath } = require('./util/proc.cjs');
 const { registerFonts } = require('./util/fonts.cjs');
 
@@ -80,7 +80,10 @@ async function keyChecks({ fetch, env, writeModels }) {
     checks.push(missing('GEMINI_API_KEY', 'gemini-key'));
   } else {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${env.GEMINI_API_KEY}`,
+      'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000',
+      {
+        headers: { 'x-goog-api-key': env.GEMINI_API_KEY },
+      },
     );
     if (!res.ok) {
       checks.push(check('gemini-key', false, `Gemini rejected the key (HTTP ${res.status}).`));
@@ -137,14 +140,24 @@ async function keyChecks({ fetch, env, writeModels }) {
   return checks;
 }
 
+/** Replace every configured secret in a message with "***" (Pixabay only accepts a URL key). */
+function redact(text, env) {
+  let out = String(text);
+  for (const key of ENV_KEYS) {
+    if (env[key]) out = out.split(env[key]).join('***');
+  }
+  return out;
+}
+
 async function doctor({ fetch = globalThis.fetch, env = loadEnv(), writeModels = true } = {}) {
   const checks = [...localChecks()];
   try {
     checks.push(...(await keyChecks({ fetch, env, writeModels })));
   } catch (err) {
-    checks.push(check('network', false, `Network check failed: ${err.message}`));
+    checks.push(check('network', false, `Network check failed: ${err.name}: ${err.message}`));
   }
-  return { ok: checks.every((c) => c.ok), checks };
+  const safe = checks.map((c) => ({ ...c, detail: redact(c.detail, env) }));
+  return { ok: safe.every((c) => c.ok), checks: safe };
 }
 
 module.exports = { doctor, chooseReviewModel };

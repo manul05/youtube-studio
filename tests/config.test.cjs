@@ -55,6 +55,23 @@ test('doctor reports a malformed config/local.json instead of crashing', async (
   }
 });
 
+test('doctor sends the Gemini key in a header and never leaks keys into messages', async () => {
+  const urls = [];
+  const throwingFetch = async (url) => {
+    urls.push(url);
+    throw new Error(`request to ${url} failed`);
+  };
+  const env = {
+    GEMINI_API_KEY: 'SECRET-G',
+    PEXELS_API_KEY: 'SECRET-P',
+    PIXABAY_API_KEY: 'SECRET-X',
+  };
+  const report = await doctor({ fetch: throwingFetch, env, writeModels: false });
+  assert.ok(!urls[0].includes('SECRET-G'), 'Gemini key is not in the URL');
+  const text = JSON.stringify(report);
+  for (const secret of Object.values(env)) assert.ok(!text.includes(secret), `${secret} redacted`);
+});
+
 test('doctor reports a rejected Gemini key as a failed check without throwing', async () => {
   const fakeFetch = async () => ({ ok: false, status: 401, json: async () => ({}) });
   const report = await doctor({

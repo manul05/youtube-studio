@@ -1,0 +1,16 @@
+{
+  "topic": "",
+  "angle": "",
+  "audience": "",
+  "promise": "",
+  "language": "en",
+  "captionScript": "latin",
+  "channel": "",
+  "lengthTargetMin": 12,
+  "titles": ["", "", ""],
+  "thumbTexts": ["", "", ""],
+  "mood": [],
+  "hook": "",
+  "style": { "main": "", "accents": {} },
+  "formats": ["long", "short"]
+}

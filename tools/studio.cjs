@@ -22,7 +22,31 @@ const COMMANDS = {
       return report.ok ? 0 : 1;
     },
   },
+  next: {
+    summary: 'Show the single next step for a project, with its command and playbook.',
+    run: ({ positional }) => {
+      const project = requireProject(positional);
+      const { nextAction } = require('../engine/next.cjs');
+      const action = nextAction(project);
+      if (!action.stepId) {
+        console.log(`${project.name}: everything is done.`);
+        return 0;
+      }
+      console.log(`Project: ${project.name}`);
+      console.log(`Next:    ${action.stepId}`);
+      console.log(`Run:     npm run ${action.command} -- ${project.name}`);
+      console.log(`Guide:   ${action.playbook}`);
+      for (const reason of action.reasons) console.log(`Why:     ${reason}`);
+      return 0;
+    },
+  },
 };
+
+function requireProject(positional) {
+  const { openProject } = require('../engine/project.cjs');
+  if (!positional[0]) throw new Error('Name the project, e.g. npm run next -- 2026-10-25-cjp');
+  return openProject(positional[0]);
+}
 
 function printHelp() {
   console.log('Studio commands (run with: npm run <command> -- [project] [--flags])\n');

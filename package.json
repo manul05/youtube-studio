@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "help": "node tools/studio.cjs help",
-    "doctor": "node tools/studio.cjs doctor"
+    "doctor": "node tools/studio.cjs doctor",
+    "next": "node tools/studio.cjs next"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

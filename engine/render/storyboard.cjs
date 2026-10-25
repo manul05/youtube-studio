@@ -37,7 +37,7 @@ async function storyboard(
   const plan = readJson(planFile);
   const ledgerFile = project.path('assets', 'ledger.json');
   const ledger = fs.existsSync(ledgerFile) ? readJson(ledgerFile) : { images: {}, stock: {} };
-  const dir = project.path('outputs', label);
+  const dir = project.path('outputs', ...label.split('/'));
   ensureDir(dir);
   for (const old of fs.readdirSync(dir)) {
     if (/^(beat_.*|contact_\d+)\.jpg$/.test(old)) fs.rmSync(path.join(dir, old));

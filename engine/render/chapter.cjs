@@ -73,14 +73,16 @@ function beatWords(project, beat, fps) {
 
 async function loadBeatAssets(project, beat, plan, ledger) {
   const assets = { image: null, video: null, logo: null };
+  // A Short's beat re-uses the image or clip of the long-form beat it came from.
+  const assetId = beat.sourceBeat || beat.id;
   if (beat.fields && beat.fields.imagePrompt) {
-    const file = project.path('assets', 'images', `img_${beat.id}.png`);
+    const file = project.path('assets', 'images', `img_${assetId}.png`);
     if (!fs.existsSync(file))
-      throw new Error(`Missing image for ${beat.id}: assets/images/img_${beat.id}.png`);
+      throw new Error(`Missing image for ${beat.id}: assets/images/img_${assetId}.png`);
     assets.image = await loadImage(file);
   }
   if (beat.type === 'stock') {
-    const entry = ledger.stock && ledger.stock[beat.id];
+    const entry = ledger.stock && ledger.stock[assetId];
     if (!entry) throw new Error(`No stock clip picked for ${beat.id} (npm run stock:pick).`);
     assets.video = openVideoSource(project.path(entry.file), {
       w: plan.width,
@@ -276,7 +278,7 @@ async function renderChapter(project, chapterId, opts = {}) {
 function hashImages(project, beats) {
   return sha256Text(
     beats
-      .map((b) => project.path('assets', 'images', `img_${b.id}.png`))
+      .map((b) => project.path('assets', 'images', `img_${b.sourceBeat || b.id}.png`))
       .filter((f) => fs.existsSync(f))
       .map((f) => sha256File(f))
       .join(''),

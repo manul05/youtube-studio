@@ -76,12 +76,13 @@ const STEPS = [
     'preview',
     '10-storyboard',
     ['beats.json', 'assets/ledger.json', 'assets/images/*'],
-    ['outputs/storyboard/*'],
+    ['outputs/storyboard/*', 'outputs/storyboard-shorts/**'],
   ),
   gate('gate:storyboard', '10-storyboard', [
     'beats.json',
     'assets/ledger.json',
     'outputs/storyboard/*',
+    'outputs/storyboard-shorts/**',
     'outputs/package/thumb_draft_*',
   ]),
   step(

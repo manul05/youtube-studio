@@ -38,7 +38,8 @@
     "stock:search": "node tools/studio.cjs stock:search",
     "stock:pick": "node tools/studio.cjs stock:pick",
     "preview": "node tools/studio.cjs preview",
-    "render": "node tools/studio.cjs render"
+    "render": "node tools/studio.cjs render",
+    "shorts": "node tools/studio.cjs shorts"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

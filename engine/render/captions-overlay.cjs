@@ -34,7 +34,7 @@ function drawCaptions(ctx, cues, t, style, env) {
       y,
       width,
       size,
-      minSize: Math.round(size * 0.7),
+      minSize: Math.round(size * 0.55),
       maxLines: 1,
       align: 'center',
       font,

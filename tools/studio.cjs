@@ -106,6 +106,7 @@ Object.assign(COMMANDS, require('../engine/plan/commands.cjs').COMMANDS);
 Object.assign(COMMANDS, require('../engine/styles/commands.cjs').COMMANDS);
 Object.assign(COMMANDS, require('../engine/assets/commands.cjs').COMMANDS);
 Object.assign(COMMANDS, require('../engine/render/commands.cjs').COMMANDS);
+Object.assign(COMMANDS, require('../engine/shorts/commands.cjs').COMMANDS);
 
 function printHelp() {
   console.log('Studio commands (run with: npm run <command> -- [project] [--flags])\n');

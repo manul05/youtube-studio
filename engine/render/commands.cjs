@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('node:fs');
+const { readJson } = require('../util/files.cjs');
 const { openProject } = require('../project.cjs');
 const { writeStamp } = require('../next.cjs');
 const { storyboard } = require('./storyboard.cjs');
@@ -31,6 +33,15 @@ const COMMANDS = {
     run: async ({ positional }) => {
       const project = projectFrom(positional);
       const out = await storyboard(project);
+      const brief = project.brief;
+      if ((brief.formats || []).includes('short') && fs.existsSync(project.path('shorts.json'))) {
+        const { planShort } = require('../shorts/build.cjs');
+        fs.rmSync(project.path('outputs', 'storyboard-shorts'), { recursive: true, force: true });
+        for (const short of readJson(project.path('shorts.json'))) {
+          const planFile = await planShort(project, short);
+          await storyboard(project, { planFile, label: `storyboard-shorts/${short.id}` });
+        }
+      }
       writeStamp(project, 'storyboard');
       console.log(
         `Storyboard ready: ${out.sheets.length} contact sheet(s). Review at stop 4: npm run review -- ${project.name}`,

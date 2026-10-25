@@ -5,6 +5,7 @@ const { writeStamp } = require('../next.cjs');
 const { composeThumbnails } = require('./thumbnails.cjs');
 const { thumbIssues, titleIssues } = require('./thumbs-check.cjs');
 const { writeDescription } = require('./description.cjs');
+const { writeCaptions } = require('./captions.cjs');
 
 function projectFrom(positional) {
   if (!positional[0]) throw new Error('Name the project, e.g. npm run package -- 2026-10-25-cjp');
@@ -25,6 +26,7 @@ const COMMANDS = {
       const project = projectFrom(positional);
       const thumbs = await composeThumbnails(project);
       const described = writeDescription(project);
+      writeCaptions(project);
       const issues = [
         ...(await checkThumbs(project, thumbs)),
         ...titleIssues(project.brief.titles),

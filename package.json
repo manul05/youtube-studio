@@ -41,7 +41,8 @@
     "render": "node tools/studio.cjs render",
     "shorts": "node tools/studio.cjs shorts",
     "package": "node tools/studio.cjs package",
-    "thumbs:check": "node tools/studio.cjs thumbs:check"
+    "thumbs:check": "node tools/studio.cjs thumbs:check",
+    "qc": "node tools/studio.cjs qc"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

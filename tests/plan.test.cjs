@@ -177,3 +177,26 @@ test('the plan command writes beats.json and stamps the step when the plan is cl
   assert.ok(!('script' in beats), 'the script is not copied into beats.json');
   assert.ok(fs.existsSync(project.path('work', 'stamps', 'plan.json')));
 });
+
+test('the pause between two paragraphs stays under the silence limit', () => {
+  const project = projectWith([
+    { words: 10, step: 0.4, beats: [{ type: 'art-focus', atWord: 0, ...focus }] },
+    { words: 10, step: 0.4, beats: [{ type: 'art-focus', atWord: 0, ...focus }] },
+  ]);
+  // Paragraph files are cut mid-pause, so each one already carries ~0.35 s of natural quiet at
+  // each end; the planner's lead and hold come on top of that.
+  for (const id of ['c01p01', 'c01p02']) {
+    const file = project.path('work', 'align', `${id}.json`);
+    const align = JSON.parse(fs.readFileSync(file, 'utf8'));
+    align.words = align.words.map((w) => ({ ...w, start: w.start + 0.35, end: w.end + 0.35 }));
+    align.durationSec = align.words[align.words.length - 1].end + 0.35;
+    fs.writeFileSync(file, JSON.stringify(align));
+  }
+  const plan = compilePlan(project);
+  const [p1, p2] = plan.paragraphs;
+  const read = (id) =>
+    JSON.parse(fs.readFileSync(project.path('work', 'align', `${id}.json`), 'utf8')).words;
+  const lastEnd = p1.startFrame / FPS + p1.lead + read('c01p01').at(-1).end;
+  const nextStart = p2.startFrame / FPS + p2.lead + read('c01p02')[0].start;
+  assert.ok(nextStart - lastEnd <= 1.0 + 1 / FPS, `pause is ${(nextStart - lastEnd).toFixed(2)} s`);
+});

@@ -86,6 +86,15 @@ async function splitChapter(project, chapterNumber, { asr = defaultAsr(project) 
     let start = 0;
     let sourceKind = 'chapter';
 
+    // A retake recorded for older paragraph text would speak the old words: drop it.
+    const overrideMeta = override.replace(/.wav$/, '.json');
+    if (fs.existsSync(override)) {
+      const recorded = fs.existsSync(overrideMeta) ? readJson(overrideMeta).text : null;
+      if (recorded !== spokenText(paragraph, pron).tts) {
+        fs.rmSync(override, { force: true });
+        fs.rmSync(overrideMeta, { force: true });
+      }
+    }
     if (fs.existsSync(override)) {
       const timed = timeParagraph(paragraph, pron, await asr(override));
       spoken = timed.spoken;

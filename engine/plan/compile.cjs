@@ -36,6 +36,20 @@ function loadAlignment(project, paragraphId) {
   return readJson(file);
 }
 
+/** Longest pause between two paragraphs: below QC's 1.2 s unintended-silence limit. */
+const MAX_PARAGRAPH_PAUSE = 1.0;
+
+/**
+ * Paragraph files are cut mid-pause, so their own quiet edges, the next paragraph's lead and the
+ * hold add up. Shorten the hold so the spoken pause stays within MAX_PARAGRAPH_PAUSE.
+ */
+function cappedHold(hold, align, next) {
+  if (!next || !align.words.length || !next.words.length) return hold;
+  const tail = align.durationSec - align.words[align.words.length - 1].end;
+  const room = MAX_PARAGRAPH_PAUSE - tail - LEAD - next.words[0].start;
+  return Math.max(0, Math.min(hold, room));
+}
+
 /**
  * Compile the beat intents in script.json into frame-exact beats.json for the long-form video.
  * Paragraph span = 0.18 s lead + voice duration + hold. Chapters 2+ open with a 2.5 s title card
@@ -48,6 +62,7 @@ function compilePlan(project, { format = 'long' } = {}) {
   const chapters = [];
   const paragraphs = [];
   let frame = 0;
+  const order = script.chapters.flatMap((c) => c.paragraphs.map((p) => p.id));
 
   script.chapters.forEach((chapter, chapterIndex) => {
     const chapterStart = frame;
@@ -67,7 +82,13 @@ function compilePlan(project, { format = 'long' } = {}) {
     }
     for (const paragraph of chapter.paragraphs) {
       const align = loadAlignment(project, paragraph.id);
-      const spanFrames = Math.ceil((LEAD + align.durationSec + (paragraph.hold ?? 0.4)) * FPS);
+      const nextId = order[order.indexOf(paragraph.id) + 1];
+      const hold = cappedHold(
+        paragraph.hold ?? 0.4,
+        align,
+        nextId && loadAlignment(project, nextId),
+      );
+      const spanFrames = Math.ceil((LEAD + align.durationSec + hold) * FPS);
       const paragraphStart = frame;
       paragraphs.push({
         id: paragraph.id,

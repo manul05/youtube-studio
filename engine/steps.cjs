@@ -60,7 +60,7 @@ const STEPS = [
     'align',
     'align',
     '07-align',
-    ['work/voice/chapters/*'],
+    ['work/voice/chapters/*', 'work/voice/overrides/*'],
     ['work/voice/paragraphs/*', 'work/align/*'],
   ),
   step('plan', 'plan', '08-plan', ['script.json', 'brief.json', 'work/align/*'], ['beats.json']),

@@ -244,3 +244,42 @@ test('a word the recogniser missed between touching words still gets a real dura
     );
   }
 });
+
+test('a retake recorded for older paragraph text is dropped, and retakes are an align input', async () => {
+  const { createProject, openProject } = require('../engine/project.cjs');
+  const { splitChapter } = require('../engine/align/split.cjs');
+  const { findStep } = require('../engine/steps.cjs');
+  const { run, ffmpegPath } = require('../engine/util/proc.cjs');
+  const projectsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'studio-align-retake-'));
+  const project = openProject(
+    createProject('demo', { channel: 'en-placeholder', date: '2026-10-25', projectsDir }),
+  );
+  const text = 'The court heard the case on a quiet Monday morning in May. [[analysis]]';
+  fs.writeFileSync(
+    project.path('script.json'),
+    JSON.stringify({
+      chapters: [{ id: 1, title: 'x', paragraphs: [{ id: 'c01p01', text, hold: 0.4 }] }],
+    }),
+  );
+  const sine = (file) => {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    run(ffmpegPath(), ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=f=200:d=6', file]);
+  };
+  sine(project.path('work', 'voice', 'chapters', 'c01.wav'));
+  const retake = project.path('work', 'voice', 'overrides', 'c01p01.wav');
+  sine(retake);
+  fs.writeFileSync(
+    retake.replace(/\.wav$/, '.json'),
+    JSON.stringify({ text: 'The court heard the case on a quiet Friday morning in May.' }),
+  );
+  const tokens = text
+    .replace(/\[\[[^\]]+\]\]/g, '')
+    .split(/\s+/)
+    .filter(Boolean);
+  const asr = tokens.map((t, i) => ({ text: t, start: 0.2 + i * 0.4, end: 0.5 + i * 0.4 }));
+  await splitChapter(project, 1, { asr: async () => asr });
+  const aligned = JSON.parse(fs.readFileSync(project.path('work', 'align', 'c01p01.json'), 'utf8'));
+  assert.equal(aligned.source, 'chapter');
+  assert.equal(fs.existsSync(retake), false, 'the stale retake is removed');
+  assert.ok(findStep('align').inputs(project).includes('work/voice/overrides/*'));
+});

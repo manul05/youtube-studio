@@ -84,9 +84,19 @@ function ordinal(n) {
   return [...words, fixed].join(' ');
 }
 
+/** Devanagari digits (०–९) as ASCII digits. */
+function asciiDigits(token) {
+  return String(token).replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966));
+}
+
+/** A recogniser token written as digits ("15", "2026", "१५", "40%"). */
+function isDigitToken(token) {
+  return /^\d[\d,.]*(st|nd|rd|th|%)?[^\p{L}\p{N}]*$/u.test(asciiDigits(token));
+}
+
 /** Replace a digit token with words; other tokens are returned unchanged. */
 function spellNumber(token) {
-  const m = /^(\d[\d,]*)(st|nd|rd|th|%)?([^\p{L}\p{N}]*)$/u.exec(token);
+  const m = /^(\d[\d,]*)(st|nd|rd|th|%)?([^\p{L}\p{N}]*)$/u.exec(asciiDigits(token));
   if (!m) return token;
   const n = Number(m[1].replace(/,/g, ''));
   if (!Number.isSafeInteger(n) || n >= 1e12) return token;
@@ -97,4 +107,4 @@ function spellNumber(token) {
   return words + m[3];
 }
 
-module.exports = { spellNumber, cardinal, ordinal };
+module.exports = { spellNumber, cardinal, ordinal, isDigitToken };

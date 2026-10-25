@@ -143,6 +143,7 @@ async function searchStock(project, { fetch = globalThis.fetch, env = loadEnv() 
   const minimum = portrait ? [1080, 1920] : [1920, 1080];
   const results = [];
   for (const beat of plan.beats.filter((b) => b.type === 'stock')) {
+    if (!BEAT_ID.test(String(beat.id))) throw new Error(`Invalid beat id "${beat.id}".`);
     const dir = project.path('assets', 'stock', '_incoming', beat.id);
     fs.rmSync(dir, { recursive: true, force: true });
     ensureDir(dir);

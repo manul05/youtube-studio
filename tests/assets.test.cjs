@@ -292,3 +292,15 @@ test('images:check completes the assets step only when every image is present an
   }
   assert.ok(fs.existsSync(project.path('work', 'stamps', 'assets.json')));
 });
+
+test('stock search refuses a beat id that would reach outside the project before deleting anything', async () => {
+  const project = projectWithPlan([{ id: '../../victim', type: 'stock', fields: { query: 'x' } }]);
+  const victim = project.path('assets', 'victim');
+  fs.mkdirSync(victim, { recursive: true });
+  fs.writeFileSync(path.join(victim, 'keep.txt'), 'keep');
+  await assert.rejects(
+    () => searchStock(project, { fetch: async () => ({ ok: false }), env: {} }),
+    /Invalid beat id/,
+  );
+  assert.ok(fs.existsSync(path.join(victim, 'keep.txt')));
+});

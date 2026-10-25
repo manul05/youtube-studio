@@ -283,3 +283,34 @@ test('a retake recorded for older paragraph text is dropped, and retakes are an 
   assert.equal(fs.existsSync(retake), false, 'the stale retake is removed');
   assert.ok(findStep('align').inputs(project).includes('work/voice/overrides/*'));
 });
+
+test('Hindi numbers the recogniser wrote as digits do not count as missed words', () => {
+  const asrOf = (text) =>
+    tokens(text).map((t, i) => ({ text: t, start: 0.1 + i * 0.4, end: 0.45 + i * 0.4 }));
+  const spoken = matchWords(
+    tokens('मई की पंद्रह तारीख को फैसला आया'),
+    asrOf('मई की 15 तारीख को फैसला आया'),
+  );
+  assert.equal(spoken.interpolatedRatio, 0);
+  const fifteen = spoken.words[2];
+  assert.ok(
+    fifteen.start >= 0.85 - 1e-9 && fifteen.end <= 1.3 + 1e-9,
+    'timed in the gap the digits fill',
+  );
+  const devanagariDigits = matchWords(tokens('१५ मई को फैसला आया'), asrOf('15 मई को फैसला आया'));
+  assert.equal(devanagariDigits.interpolatedRatio, 0);
+});
+
+test('a name with a multi-word pronunciation still maps back when it is possessive', () => {
+  const { spokenText } = require('../engine/words/text.cjs');
+  const pron = { Modi: 'Mo dee', 'Surya Kant': 'Soor-ya Kaant' };
+  const paragraph = { id: 'c01p01', text: "Modi's plan met Surya Kant’s ruling. [[analysis]]" };
+  const { tts, captions } = spokenText(paragraph, pron);
+  const spoken = tokens(tts).map((t, i) => ({ text: t, start: i * 0.4, end: i * 0.4 + 0.3 }));
+  const words = mapSubstitutions(matchWords(tokens(tts), spoken).words, captions, pron);
+  assert.deepEqual(
+    words.map((w) => w.text),
+    ["Modi's", 'plan', 'met', 'Surya', 'Kant’s', 'ruling.'],
+  );
+  assert.equal(words[0].end, spoken[1].end, '"Modi\'s" spans both spoken parts');
+});

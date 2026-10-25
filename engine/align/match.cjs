@@ -1,7 +1,7 @@
 'use strict';
 
 const { phonetic } = require('./phonetic.cjs');
-const { spellNumber } = require('./numbers.cjs');
+const { spellNumber, isDigitToken } = require('./numbers.cjs');
 const { wordRegex } = require('../words/text.cjs');
 
 /** Lower-case letters, marks and digits only (keeps Devanagari; drops punctuation). */
@@ -97,6 +97,7 @@ function matchWords(sourceTokens, asrWords, { idPrefix = 'w' } = {}) {
     return word;
   });
 
+  excuseNumberGaps(words, asrWords);
   fillGaps(words, asrWords);
   const countable = words.filter((w) => w.matchable);
   const missed = countable.filter((w) => w.interpolated).length;
@@ -107,9 +108,33 @@ function matchWords(sourceTokens, asrWords, { idPrefix = 'w' } = {}) {
   };
 }
 
-/** Spread runs of untimed words evenly between their timed neighbours. */
+/**
+ * Number words are only spelled out in English, so "पंद्रह" in the script cannot match a "15" from
+ * the recogniser. An unmatched run facing only digit tokens in the same time gap is the number,
+ * said as written: it is timed from the gap but not counted as a missed word.
+ */
+function excuseNumberGaps(words, asrWords) {
+  let k = 0;
+  while (k < words.length) {
+    if (words[k].start !== null) {
+      k += 1;
+      continue;
+    }
+    let end = k;
+    while (end < words.length && words[end].start === null) end += 1;
+    const from = k > 0 ? words[k - 1].end : -Infinity;
+    const to = end < words.length ? words[end].start : Infinity;
+    const inGap = asrWords.filter((w) => w.start >= from - 0.02 && w.end <= to + 0.02);
+    if (inGap.length && inGap.every((w) => isDigitToken(w.text))) {
+      for (let i = k; i < end; i += 1) words[i].matchable = false;
+    }
+    k = end;
+  }
+}
+
 const MIN_FILLED_WORD = 0.08;
 
+/** Spread runs of untimed words evenly between their timed neighbours. */
 function fillGaps(words, asrWords) {
   const first = asrWords.length ? asrWords[0].start : 0;
   const last = asrWords.length ? asrWords[asrWords.length - 1].end : 0;
@@ -158,6 +183,12 @@ function fillGaps(words, asrWords) {
   }
 }
 
+/** A caption token is the name's word, allowing a possessive ("Modi's", "Kant’s"). */
+function sameName(token, part) {
+  const want = canon(part);
+  return canon(token) === want || canon(String(token).replace(/['’]s?(?=\P{L}*$)/u, '')) === want;
+}
+
 /**
  * The voice spoke the pronunciation text ("Soor-ya Kaant"); captions show the real spelling
  * ("Surya Kant"). Map timed spoken words back onto caption tokens, sharing a substituted span
@@ -175,7 +206,7 @@ function mapSubstitutions(spokenWords, captionsText, pronunciations = {}) {
       const slice = captionTokens.slice(i, i + parts.length);
       if (
         slice.length === parts.length &&
-        slice.every((tok, n) => canon(tok) === canon(parts[n])) &&
+        slice.every((tok, n) => sameName(tok, parts[n])) &&
         wordRegex(name, 'u').test(slice.join(' '))
       ) {
         matched = { caption: slice, spoken: pronunciations[name].split(/\s+/).length };

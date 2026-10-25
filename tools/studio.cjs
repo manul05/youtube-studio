@@ -53,6 +53,20 @@ const COMMANDS = {
       return 0;
     },
   },
+  release: {
+    summary:
+      'Owner only: type the PIN to assemble outputs/release/ (refuses unless everything passes).',
+    run: async ({ positional }) => {
+      requireOwnerTerminal('release');
+      const project = requireProject(positional);
+      const { release } = require('../engine/release.cjs');
+      const pin = await askHidden('Your PIN: ');
+      const out = await release(project, pin);
+      console.log(`Released (score ${out.score.total}): ${out.dir}`);
+      console.log('Follow UPLOAD_CHECKLIST.md in that folder to publish.');
+      return 0;
+    },
+  },
   review: {
     summary: 'Open the local review pages for a project (stops 1–5).',
     run: async ({ positional, flags }) => {

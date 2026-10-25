@@ -44,7 +44,8 @@
     "thumbs:check": "node tools/studio.cjs thumbs:check",
     "qc": "node tools/studio.cjs qc",
     "review:ai": "node tools/studio.cjs review:ai",
-    "score": "node tools/studio.cjs score"
+    "score": "node tools/studio.cjs score",
+    "release": "node tools/studio.cjs release"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

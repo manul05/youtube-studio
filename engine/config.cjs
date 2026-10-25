@@ -44,8 +44,20 @@ function qc() {
   return readJson(rootPath('config', 'qc.json'));
 }
 
+const CHANNEL_ID = /^[a-z0-9][a-z0-9-]*$/;
+
+/** A channel's folder: STUDIO_LIBRARY_DIR/channels first (tests), then library/channels. */
+function channelDir(id) {
+  if (!CHANNEL_ID.test(String(id))) throw new Error(`Invalid channel id "${id}".`);
+  const roots = [process.env.STUDIO_LIBRARY_DIR, rootPath('library')].filter(Boolean);
+  const found = roots
+    .map((r) => require('node:path').join(r, 'channels', id))
+    .find((d) => fs.existsSync(d));
+  return found || rootPath('library', 'channels', id);
+}
+
 function channel(id) {
-  const file = rootPath('library', 'channels', id, 'channel.json');
+  const file = require('node:path').join(channelDir(id), 'channel.json');
   if (!fs.existsSync(file)) {
     throw new Error(`Unknown channel "${id}". Create library/channels/${id}/channel.json.`);
   }
@@ -54,7 +66,7 @@ function channel(id) {
 }
 
 function channelLogo(id) {
-  return rootPath('library', 'channels', id, 'logo.png');
+  return require('node:path').join(channelDir(id), 'logo.png');
 }
 
 module.exports = { ENV_KEYS, loadEnv, models, saveModels, qc, channel, channelLogo };

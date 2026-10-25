@@ -13,17 +13,24 @@ const { measure, secondPassFilter } = require('../audio/loudness.cjs');
  */
 async function assembleMaster(
   project,
-  { label = 'long', dest = project.path('outputs', 'master.mp4') } = {},
+  {
+    label = 'long',
+    planFile = project.path('beats.json'),
+    dest = project.path('outputs', 'master.mp4'),
+    audioDir = project.path('work', 'audio'),
+    qcFile = project.path('outputs', 'qc', 'audio.json'),
+  } = {},
 ) {
-  const plan = readJson(project.path('beats.json'));
+  const plan = readJson(planFile);
   const video = project.path('work', 'render', label, 'video.mp4');
   if (!fs.existsSync(video)) throw new Error('No rendered video yet (render the chapters first).');
   const stream = probe(video).streams.find((s) => s.codec_type === 'video');
   if (Number(stream.nb_frames) !== plan.frames) {
     throw new Error(`Rendered video has ${stream.nb_frames} frames; the plan has ${plan.frames}.`);
   }
-  const { mixed, firstPass, picks } = await buildMix(project, plan);
-  ensureDir(project.path('outputs', 'qc'));
+  const { mixed, firstPass, picks } = await buildMix(project, plan, { dir: audioDir });
+  ensureDir(require('node:path').dirname(qcFile));
+  ensureDir(require('node:path').dirname(dest));
   const partial = dest.replace(/\.mp4$/, '.partial.mp4');
   const duration = plan.frames / plan.fps;
   run(ffmpegPath(), [
@@ -62,11 +69,11 @@ async function assembleMaster(
   ]);
   fs.renameSync(partial, dest);
   const final = measure(dest);
-  writeJson(project.path('outputs', 'qc', 'audio.json'), {
+  writeJson(qcFile, {
     method: 'Two-pass loudnorm; measured again after AAC encoding',
     firstPass: { lufs: firstPass.lufs, truePeak: firstPass.truePeak },
     final: { lufs: final.lufs, truePeak: final.truePeak, lra: final.lra },
-    voiceToMusicDb: voiceToMusicDb(project),
+    voiceToMusicDb: voiceToMusicDb(project, audioDir),
     music: picks.map((p) => ({
       chapter: p.chapterId,
       file: p.entry.file,

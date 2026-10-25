@@ -1,7 +1,7 @@
 'use strict';
 
 const { loadStyle } = require('../styles/loader.cjs');
-const { libraryDir, musicIndex } = require('./library.cjs');
+const { libraryFile, musicIndex } = require('./library.cjs');
 
 /**
  * One licensed track per chapter, chosen by overlap between the brief's mood and the main
@@ -27,8 +27,8 @@ function pickMusic(brief, plan) {
   const picks = [];
   plan.chapters.forEach((chapter, i) => {
     const previous = picks[i - 1] && picks[i - 1].file;
-    const track = ranked.find((t) => libraryDir('music', t.file) !== previous) || ranked[0];
-    picks.push({ chapterId: chapter.id, file: libraryDir('music', track.file), entry: track });
+    const track = ranked.find((t) => libraryFile('music', t.file) !== previous) || ranked[0];
+    picks.push({ chapterId: chapter.id, file: libraryFile('music', track.file), entry: track });
   });
   return picks;
 }

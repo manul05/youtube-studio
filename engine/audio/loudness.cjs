@@ -29,9 +29,23 @@ function measure(file) {
   };
 }
 
+/** A measurement value as a plain number string; anything else is refused. */
+function num(value) {
+  const n = Number(value);
+  if (String(value).trim() === '' || !Number.isFinite(n)) {
+    throw new Error(`Unexpected loudness measurement value "${value}".`);
+  }
+  return String(n);
+}
+
 /** Second-pass loudnorm filter (linear) from a first-pass measurement. */
 function secondPassFilter(m) {
-  const r = m.raw;
+  const r = Object.fromEntries(
+    ['input_i', 'input_tp', 'input_lra', 'input_thresh', 'target_offset'].map((k) => [
+      k,
+      num(m.raw[k]),
+    ]),
+  );
   return (
     `loudnorm=${TARGET}:measured_I=${r.input_i}:measured_TP=${r.input_tp}` +
     `:measured_LRA=${r.input_lra}:measured_thresh=${r.input_thresh}:offset=${r.target_offset}:linear=true`

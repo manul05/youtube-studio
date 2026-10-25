@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const { ffmpegPath } = require('../util/proc.cjs');
-const { libraryDir, sfxIndex } = require('./library.cjs');
+const { libraryFile, sfxIndex } = require('./library.cjs');
 const {
   listSchedule,
   timelineSchedule,
@@ -90,7 +90,7 @@ function sources() {
   const map = {};
   for (const kind of ['whoosh', 'hit', 'click', 'paper']) {
     const entry = sfxIndex().find((e) => e.kind === kind);
-    map[kind] = entry ? decodeMono(libraryDir('sfx', entry.file)) : synth(kind);
+    map[kind] = entry ? decodeMono(libraryFile('sfx', entry.file)) : synth(kind);
   }
   return map;
 }

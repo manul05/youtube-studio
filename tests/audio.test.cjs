@@ -158,3 +158,31 @@ test(
     assert.ok(audio.final.truePeak <= -1.0, `true peak ${audio.final.truePeak}`);
   },
 );
+
+test('the second loudness pass only accepts numeric measurements', () => {
+  const { secondPassFilter } = require('../engine/audio/loudness.cjs');
+  const good = {
+    raw: {
+      input_i: '-20.1',
+      input_tp: '-3.2',
+      input_lra: '4.0',
+      input_thresh: '-30.5',
+      target_offset: '0.4',
+    },
+  };
+  assert.match(secondPassFilter(good), /measured_I=-20\.1/);
+  const evil = { raw: { ...good.raw, input_i: '-20,afade=t=out' } };
+  assert.throws(() => secondPassFilter(evil), /loudness measurement/);
+});
+
+test('library entries that point outside the library are refused', () => {
+  fs.mkdirSync(path.join(LIBRARY, 'music'), { recursive: true });
+  fs.writeFileSync(
+    path.join(LIBRARY, 'music', 'index.json'),
+    JSON.stringify([{ file: '../../evil.wav', moods: ['neutral'], licence: 'x' }]),
+  );
+  assert.throws(
+    () => pickMusic({ mood: ['neutral'], style: { main: 'fixture' } }, { chapters: [{ id: 1 }] }),
+    /library/,
+  );
+});

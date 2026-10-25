@@ -17,6 +17,7 @@ const { channel, channelLogo } = require('../config.cjs');
 const { createFrameCanvas } = require('./context.cjs');
 const { openVideoSource } = require('./video-source.cjs');
 const { loadStyle, styleForBeat } = require('../styles/loader.cjs');
+const { drawCaptions } = require('./captions-overlay.cjs');
 
 const CROSSFADE_FRAMES = 9; // 0.3 s at 30 fps
 
@@ -62,6 +63,7 @@ function waitDrain(stream, child) {
 
 /** Aligned words of a beat's paragraph, re-timed so 0 is the beat's first frame. */
 function beatWords(project, beat, fps) {
+  if (Array.isArray(beat.words)) return beat.words;
   if (!beat.paragraph) return [];
   const file = project.path('work', 'align', `${beat.paragraph}.json`);
   if (!fs.existsSync(file)) return [];
@@ -199,6 +201,9 @@ async function renderChapter(project, chapterId, opts = {}) {
     });
   });
 
+  const captionStyle = Array.isArray(plan.captions)
+    ? loadStyle(plan.captionPack || 'vertical-captions')
+    : null;
   const started = Date.now();
   const textLog = [];
   let previous = null; // frozen copy of the previous beat's last frame, for crossfades
@@ -229,6 +234,9 @@ async function renderChapter(project, chapterId, opts = {}) {
           ctx.globalAlpha = 1 - (f + 1) / (fade + 1);
           ctx.drawImage(previous, 0, 0);
           ctx.restore();
+        }
+        if (captionStyle) {
+          drawCaptions(ctx, plan.captions, (beat.startFrame + f) / plan.fps, captionStyle, env);
         }
         if (!ff.stdin.write(canvas.data())) await waitDrain(ff.stdin, ff);
       }

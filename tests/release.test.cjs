@@ -14,7 +14,7 @@ const { createProject, openProject } = require('../engine/project.cjs');
 const { STEPS } = require('../engine/steps.cjs');
 const { writeStamp } = require('../engine/next.cjs');
 const { setPin, deriveKey } = require('../engine/review/pin.cjs');
-const { writeApproval } = require('../engine/review/approvals.cjs');
+const { writeApproval, signOwnerRatings } = require('../engine/review/approvals.cjs');
 const { aggregate } = require('../engine/score/aggregate.cjs');
 const { release } = require('../engine/release.cjs');
 
@@ -46,7 +46,7 @@ function write(project, rel, content) {
 }
 
 /** A project with every step stamped and every stop approved with the owner's key. */
-function finishedProject({ aiScore = 97, placeholder = false } = {}) {
+function finishedProject({ aiScore = 97, placeholder = false, signedOwner = true } = {}) {
   const projectsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'studio-release-'));
   const project = openProject(
     createProject('demo', { channel: realChannel(placeholder), date: '2026-10-25', projectsDir }),
@@ -104,13 +104,18 @@ function finishedProject({ aiScore = 97, placeholder = false } = {}) {
   );
   write(project, 'outputs/score/ai.json', { categories: ai, shorts: { s1: { categories: ai } } });
   const rating = { A: 'Excellent', BG: 'Excellent', D: 'Excellent', F: 'Excellent' };
-  write(project, 'outputs/score/owner.json', {
+  const owner = {
     ...rating,
     I: 'Excellent',
     pick: { thumbnail: 2, title: 3 },
     drags: [],
     shorts: { s1: rating },
-  });
+  };
+  write(
+    project,
+    'outputs/score/owner.json',
+    signedOwner ? signOwnerRatings(owner, KEY, { pinFile: PIN_FILE }) : owner,
+  );
   aggregate(project);
 
   for (const entry of STEPS) {
@@ -192,4 +197,71 @@ test('a wrong PIN stops the release', async () => {
 test('the release command needs the owner at an interactive terminal', async () => {
   const { main } = require('../tools/studio.cjs');
   await assert.rejects(() => main(['release', 'any-project']), /interactive terminal/);
+});
+
+test('QC findings edited after the final approval stop the release', async () => {
+  const project = finishedProject();
+  write(project, 'outputs/qc/qc.json', {
+    hardFails: [],
+    issues: [],
+    shorts: { s1: { hardFails: [], issues: [], metrics: {} } },
+    edited: true,
+  });
+  writeStamp(project, 'qc');
+  writeStamp(project, 'ai-review');
+  await assert.rejects(
+    () => release(project, '123456', { pinFile: PIN_FILE }),
+    /gate:final: the reviewed files changed after approval/,
+  );
+});
+
+test('ratings that were not saved with the PIN stop the release', async () => {
+  const project = finishedProject({ signedOwner: false });
+  await assert.rejects(
+    () => release(project, '123456', { pinFile: PIN_FILE }),
+    /ratings were not saved with your PIN/,
+  );
+});
+
+test('a score that differs from the one approved at stop 5 stops the release', async () => {
+  const project = finishedProject();
+  const file = project.path('outputs', 'score', 'score.json');
+  write(project, 'outputs/score/score.json', {
+    ...JSON.parse(fs.readFileSync(file, 'utf8')),
+    total: 99.9,
+  });
+  writeApproval(project, 'gate:final', KEY, { decision: 'approve', pinFile: PIN_FILE });
+  await assert.rejects(
+    () => release(project, '123456', { pinFile: PIN_FILE }),
+    /differs from the score you approved/,
+  );
+});
+
+test('the release bar is fixed in code, not read from an editable config file', () => {
+  const config = require('../engine/config.cjs');
+  const real = config.qc;
+  config.qc = () => ({ ...real(), releaseMin: 50, categoryFloor: 0.1, hardFailCap: 100 });
+  try {
+    delete require.cache[require.resolve('../engine/score/aggregate.cjs')];
+    const { scoreOne, RELEASE_BAR } = require('../engine/score/aggregate.cjs');
+    assert.deepEqual(RELEASE_BAR, { releaseMin: 95, categoryFloor: 0.8, hardFailCap: 59 });
+    const ai = Object.fromEntries(['A', 'B', 'C', 'F', 'G', 'I'].map((c) => [c, { score: 70 }]));
+    const owner = { A: 'OK', BG: 'OK', D: 'OK', F: 'OK', I: 'OK' };
+    const result = scoreOne({ kind: 'long', ai: { categories: ai }, owner, qcFindings: [] });
+    assert.equal(result.releasable, false);
+  } finally {
+    config.qc = real;
+    delete require.cache[require.resolve('../engine/score/aggregate.cjs')];
+  }
+});
+
+test('a video with a map needs the owner to confirm the map at the release prompt', async () => {
+  const project = finishedProject();
+  const plan = JSON.parse(fs.readFileSync(project.path('beats.json'), 'utf8'));
+  plan.beats.push({ id: 'b001', type: 'map' });
+  write(project, 'beats.json', plan);
+  await assert.rejects(
+    () => release(project, '123456', { pinFile: PIN_FILE }),
+    /confirm the map when the release command asks/,
+  );
 });

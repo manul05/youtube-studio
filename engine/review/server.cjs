@@ -6,9 +6,9 @@ const http = require('node:http');
 const { STEPS, findStep } = require('../steps.cjs');
 const { evaluate, nextAction } = require('../next.cjs');
 const { deriveKey } = require('./pin.cjs');
-const { writeApproval } = require('./approvals.cjs');
+const { writeApproval, signOwnerRatings, ownerRatingsIssue } = require('./approvals.cjs');
 const { pageData } = require('./pages.cjs');
-const { writeJson } = require('../util/files.cjs');
+const { readJson, writeJson } = require('../util/files.cjs');
 const { aggregate } = require('../score/aggregate.cjs');
 
 const PAGES_DIR = path.join(__dirname, 'pages');
@@ -150,6 +150,11 @@ async function handleApproval(project, gateId, req, res, pinFile) {
       error: `This stop is not ready. The next step is "${current}".`,
     });
   }
+  if (gateId === 'gate:final' && body.decision === 'approve') {
+    const file = project.path('outputs', 'score', 'owner.json');
+    const issue = ownerRatingsIssue(fs.existsSync(file) ? readJson(file) : null, key, { pinFile });
+    if (issue) return sendJson(res, 409, { error: issue });
+  }
   const approval = writeApproval(project, gateId, key, {
     decision: body.decision,
     notes: String(body.notes || ''),
@@ -170,8 +175,9 @@ async function handleRatings(project, req, res, pinFile) {
   } catch (err) {
     return sendJson(res, 400, { error: `Bad request: ${err.message}` });
   }
+  let key;
   try {
-    deriveKey(body.pin, { pinFile });
+    key = deriveKey(body.pin, { pinFile });
   } catch (err) {
     return sendJson(res, 401, { error: err.message });
   }
@@ -204,7 +210,10 @@ async function handleRatings(project, req, res, pinFile) {
   } catch (err) {
     return sendJson(res, 400, { error: err.message });
   }
-  writeJson(project.path('outputs', 'score', 'owner.json'), owner);
+  writeJson(
+    project.path('outputs', 'score', 'owner.json'),
+    signOwnerRatings(owner, key, { pinFile }),
+  );
   const score = aggregate(project);
   return sendJson(res, 200, {
     ok: true,

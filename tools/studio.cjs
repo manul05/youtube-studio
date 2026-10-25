@@ -59,9 +59,20 @@ const COMMANDS = {
     run: async ({ positional }) => {
       requireOwnerTerminal('release');
       const project = requireProject(positional);
-      const { release } = require('../engine/release.cjs');
+      const { release, usesMap } = require('../engine/release.cjs');
+      const { readJson } = require('../engine/util/files.cjs');
+      let mapsConfirmed = false;
+      if (
+        require('node:fs').existsSync(project.path('beats.json')) &&
+        usesMap(readJson(project.path('beats.json')))
+      ) {
+        const answer = await askLine(
+          'This video shows a map. Did you check it against the official Survey of India map? Type YES: ',
+        );
+        mapsConfirmed = answer === 'YES';
+      }
       const pin = await askHidden('Your PIN: ');
-      const out = await release(project, pin);
+      const out = await release(project, pin, { mapsConfirmed });
       console.log(`Released (score ${out.score.total}): ${out.dir}`);
       console.log('Follow UPLOAD_CHECKLIST.md in that folder to publish.');
       return 0;
@@ -80,6 +91,18 @@ const COMMANDS = {
     },
   },
 };
+
+/** Ask a question in the terminal and return the typed line. */
+function askLine(question) {
+  const readline = require('node:readline');
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
 
 /** Ask a question in the terminal without echoing the answer (for the PIN). */
 function askHidden(question) {

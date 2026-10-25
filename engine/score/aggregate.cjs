@@ -2,8 +2,10 @@
 
 const fs = require('node:fs');
 const { readJson, writeJson } = require('../util/files.cjs');
-const { qc } = require('../config.cjs');
 const { RUBRIC, AI_CATEGORIES, CODE_ONLY, OWNER_MAP, LEVELS, NAMES } = require('./rubric.cjs');
+
+/** The release bar from the design (§9). Fixed in code so an edited config file cannot lower it. */
+const RELEASE_BAR = Object.freeze({ releaseMin: 95, categoryFloor: 0.8, hardFailCap: 59 });
 
 const round1 = (x) => Math.round(x * 10) / 10;
 
@@ -24,7 +26,7 @@ function ownerFractions(owner) {
  * with no AI or owner score yet scores 0 (it cannot pass by being unreviewed).
  */
 function scoreOne({ kind, ai, owner, qcFindings }) {
-  const limits = qc();
+  const limits = RELEASE_BAR;
   const weights = RUBRIC[kind];
   const ownerScores = ownerFractions(owner);
   const blocked = new Set(qcFindings.map((f) => f.category));
@@ -94,6 +96,9 @@ function aggregateScores({ ai, owner, qcReport }) {
   return { ...result, shorts, droppedShorts };
 }
 
+/** Ratings count only when saved through the review server (signed); release checks the signature. */
+const signedOrNull = (owner) => (owner && owner.sig ? owner : null);
+
 /** Read ai.json, owner.json and qc.json and write outputs/score/score.json. */
 function aggregate(project) {
   const read = (...p) => (fs.existsSync(project.path(...p)) ? readJson(project.path(...p)) : null);
@@ -101,14 +106,12 @@ function aggregate(project) {
   if (!qcReport) throw new Error('Run npm run qc first.');
   const score = aggregateScores({
     ai: read('outputs', 'score', 'ai.json'),
-    owner: read('outputs', 'score', 'owner.json'),
+    owner: signedOrNull(read('outputs', 'score', 'owner.json')),
     qcReport,
   });
-  writeJson(project.path('outputs', 'score', 'score.json'), {
-    ...score,
-    scoredAt: new Date().toISOString(),
-  });
+  // No timestamp: re-scoring unchanged inputs must not void the stop-5 approval.
+  writeJson(project.path('outputs', 'score', 'score.json'), score);
   return score;
 }
 
-module.exports = { aggregateScores, aggregate, scoreOne };
+module.exports = { aggregateScores, aggregate, scoreOne, RELEASE_BAR };

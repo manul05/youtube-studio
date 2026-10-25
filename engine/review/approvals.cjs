@@ -38,6 +38,30 @@ function writeApproval(project, gateId, key, { decision, notes = '', extra = {},
   return approval;
 }
 
+function ownerSigningText(owner) {
+  const { sig, ...rest } = owner;
+  return `owner|${JSON.stringify(rest)}`;
+}
+
+/** Sign the owner's stop-5 ratings with the PIN key (only the review server calls this). */
+function signOwnerRatings(owner, key, { pinFile } = {}) {
+  const signed = { ...owner, pinSetAt: pinRecord({ pinFile }).setAt };
+  delete signed.sig;
+  return { ...signed, sig: hmacHex(key, ownerSigningText(signed)) };
+}
+
+/** Why the owner's ratings cannot be trusted, or null when they carry a valid PIN signature. */
+function ownerRatingsIssue(owner, key, { pinFile } = {}) {
+  const problem =
+    'Your stop-5 ratings were not saved with your PIN: open the review page, rate and save again.';
+  if (!owner || !owner.sig || owner.pinSetAt !== pinRecord({ pinFile }).setAt) return problem;
+  const expected = Buffer.from(hmacHex(key, ownerSigningText(owner)), 'hex');
+  const actual = Buffer.from(String(owner.sig), 'hex');
+  if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected))
+    return problem;
+  return null;
+}
+
 /** Check every existing approval: signature, current content and PIN generation. */
 function verifyApprovals(project, key, { pinFile } = {}) {
   const issues = [];
@@ -64,4 +88,4 @@ function verifyApprovals(project, key, { pinFile } = {}) {
   return issues;
 }
 
-module.exports = { writeApproval, verifyApprovals };
+module.exports = { writeApproval, verifyApprovals, signOwnerRatings, ownerRatingsIssue };

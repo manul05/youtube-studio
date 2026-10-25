@@ -20,7 +20,7 @@ This folder is a video studio. You give Antigravity, Codex or Claude Code a topi
 4. **Your PIN** — `npm run pin:set` (6+ digits). Agents cannot approve review stops or release without it. Keep it to yourself.
 5. **Music** — download 20–30 tracks from the YouTube Audio Library into `library/music/` and list them in `library/music/index.json` (see `library/music/README.md`). Sound effects are optional (`library/sfx/README.md`).
 6. **Your channels** — one folder per channel in `library/channels/`, e.g. copy `en-placeholder` to `library/channels/my-english-channel/`, edit `channel.json` (name, handle, language, voice, `"placeholder": false`) and replace `logo.png`. Do the same for your Hindi channel.
-7. **Maps of India** — before your first video with a map, open `library/maps/SOURCES.md`, compare a rendered map with the official Survey of India map, and write your name and date on the "Owner confirmation" line.
+7. **Maps of India** — before your first video with a map, open `library/maps/SOURCES.md`, compare a rendered map with the official Survey of India map, and write your name and date on the "Owner confirmation" line. Each time you release a video with a map, the release command also asks you to confirm it (type YES).
 8. **Styles** — `npm run styles` builds `styles/gallery.html`; open it to see every style.
 
 ## Every day (about 45–60 minutes of your time)

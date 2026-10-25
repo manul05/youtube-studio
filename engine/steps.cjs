@@ -124,6 +124,7 @@ const STEPS = [
     'outputs/master.mp4',
     'outputs/shorts/*',
     'outputs/package/*',
+    'outputs/qc/*',
     'outputs/score/owner.json',
     'outputs/score/ai.json',
     'outputs/score/score.json',

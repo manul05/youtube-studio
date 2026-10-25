@@ -6,7 +6,7 @@ const { readJson, writeJson, ensureDir, sha256File } = require('./util/files.cjs
 const { channel } = require('./config.cjs');
 const { evaluate, writeStamp } = require('./next.cjs');
 const { deriveKey } = require('./review/pin.cjs');
-const { verifyApprovals } = require('./review/approvals.cjs');
+const { verifyApprovals, ownerRatingsIssue } = require('./review/approvals.cjs');
 const { aggregateScores } = require('./score/aggregate.cjs');
 const { usedSources } = require('./package/description.cjs');
 const { rootPath } = require('./util/files.cjs');
@@ -25,16 +25,26 @@ const CHECKLIST = `# Upload checklist
 10. Shorts: upload each short_*.mp4 as a Short with its own title; link the main video as the related video.
 `;
 
-function mapIssues(project, plan) {
-  if (!plan.beats.some((b) => b.type === 'map')) return [];
+const usesMap = (plan) => plan.beats.some((b) => b.type === 'map');
+
+function mapIssues(plan, mapsConfirmed) {
+  if (!usesMap(plan)) return [];
+  const issues = [];
   const file = rootPath('library', 'maps', 'SOURCES.md');
-  if (!fs.existsSync(file)) return ['The video uses a map but library/maps/SOURCES.md is missing.'];
-  if (/Owner confirmation:\s*NOT YET CONFIRMED/i.test(fs.readFileSync(file, 'utf8'))) {
-    return [
+  if (!fs.existsSync(file)) {
+    issues.push('The video uses a map but library/maps/SOURCES.md is missing.');
+  } else if (/Owner confirmation:s*NOT YET CONFIRMED/i.test(fs.readFileSync(file, 'utf8'))) {
+    issues.push(
       'The video uses a map of India: check it against the official Survey of India map and record your confirmation in library/maps/SOURCES.md.',
-    ];
+    );
   }
-  return [];
+  // SOURCES.md is a plain file an agent could edit, so the owner also confirms at the prompt.
+  if (!mapsConfirmed) {
+    issues.push(
+      'This video shows a map: confirm the map when the release command asks (it must match the official Survey of India map).',
+    );
+  }
+  return issues;
 }
 
 /**
@@ -43,10 +53,10 @@ function mapIssues(project, plan) {
  * current files, the score recomputed from the current files is releasable, the channel is real
  * and any map has the owner's source confirmation. Then writes outputs/release/<date>_<slug>/.
  */
-async function release(project, pin, { pinFile } = {}) {
+async function release(project, pin, { pinFile, mapsConfirmed = false } = {}) {
   const key = deriveKey(pin, { pinFile });
   const problems = [];
-  for (const r of evaluate(project)) {
+  for (const r of evaluate(project, { useCache: false })) {
     if (r.id === 'release') break;
     if (r.state !== 'done') problems.push(`${r.id} is ${r.state}. ${r.reasons.join(' ')}`.trim());
   }
@@ -54,12 +64,25 @@ async function release(project, pin, { pinFile } = {}) {
 
   const read = (...p) => (fs.existsSync(project.path(...p)) ? readJson(project.path(...p)) : null);
   const owner = read('outputs', 'score', 'owner.json');
+  const ownerIssue = ownerRatingsIssue(owner, key, { pinFile });
+  if (ownerIssue) problems.push(ownerIssue);
   const qcReport = read('outputs', 'qc', 'qc.json') || {
     hardFails: [{ category: 'J', hard: true, message: 'QC has not run.' }],
     issues: [],
     shorts: {},
   };
-  const score = aggregateScores({ ai: read('outputs', 'score', 'ai.json'), owner, qcReport });
+  const score = aggregateScores({
+    ai: read('outputs', 'score', 'ai.json'),
+    owner: ownerIssue ? null : owner,
+    qcReport,
+  });
+  const approved = read('outputs', 'score', 'score.json');
+  if (approved) delete approved.scoredAt;
+  if (JSON.stringify(approved) !== JSON.stringify(JSON.parse(JSON.stringify(score)))) {
+    problems.push(
+      `The score now (${score.total}) differs from the score you approved at stop 5 (${approved ? approved.total : 'none'}). Run npm run score and review stop 5 again.`,
+    );
+  }
   if (!score.releasable) {
     problems.push(
       `The score is ${score.total}; release needs 95 or more with every category at least 80% and no hard failures. ${score.explanation.join(' ')}`.trim(),
@@ -72,7 +95,7 @@ async function release(project, pin, { pinFile } = {}) {
     );
   }
   const plan = readJson(project.path('beats.json'));
-  problems.push(...mapIssues(project, plan));
+  problems.push(...mapIssues(plan, mapsConfirmed));
   if (problems.length) throw new Error(`Release refused:\n  - ${problems.join('\n  - ')}`);
 
   const date = project.name.slice(0, 10);
@@ -127,4 +150,4 @@ async function release(project, pin, { pinFile } = {}) {
   return { dir, score };
 }
 
-module.exports = { release };
+module.exports = { release, usesMap };

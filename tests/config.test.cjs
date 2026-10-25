@@ -25,7 +25,7 @@ test('loadEnv reads a .env file without overriding existing environment values',
 
 test('qc thresholds come from the spec', () => {
   assert.equal(qc().staticMaxLong, 6);
-  assert.equal(qc().releaseMin, 95);
+  assert.equal(require('../engine/score/aggregate.cjs').RELEASE_BAR.releaseMin, 95);
   assert.equal(qc().truePeakMax, -1.0);
 });
 

@@ -10,7 +10,11 @@ const http = require('node:http');
 const { createProject, openProject } = require('../engine/project.cjs');
 const { writeStamp } = require('../engine/next.cjs');
 const { setPin, deriveKey } = require('../engine/review/pin.cjs');
-const { writeApproval, verifyApprovals } = require('../engine/review/approvals.cjs');
+const {
+  writeApproval,
+  verifyApprovals,
+  ownerRatingsIssue,
+} = require('../engine/review/approvals.cjs');
 const { startServer } = require('../engine/review/server.cjs');
 
 function tempPinFile() {
@@ -220,6 +224,9 @@ test('final ratings are saved only through the server with the PIN, and are vali
     );
     assert.equal(owner.BG, 'Good');
     assert.deepEqual(owner.drags, [12.5]);
+    const key = deriveKey('123456', { pinFile });
+    assert.equal(ownerRatingsIssue(owner, key, { pinFile }), null, 'saved ratings are signed');
+    assert.match(ownerRatingsIssue({ ...owner, A: 'Bad' }, key, { pinFile }), /not saved/);
     assert.ok(fs.existsSync(project.path('outputs', 'score', 'score.json')));
   } finally {
     await server.close();

@@ -4,8 +4,8 @@
 2. `npm run review:ai -- <project>` asks a fresh Gemini model (which never saw the video being made) to score the hook, story, facts, visuals, pacing and packaging from frames and the script. Exit 75 = free-tier limit; ask the owner to run it later.
 3. **Stop 5:** tell the owner to run `npm run review -- <project>`, watch, rate and approve. The score combines measured checks, the AI review and the owner's ratings; for each judged category the lower of AI and owner counts.
 4. If the owner requests changes or the score is under 95: read `approvals/gate_final.changes.json`, `outputs/score/score.json` and the owner's "drags" markers (seconds), fix the cause (script, beats, images), and follow `next` back through the steps.
-5. **Release is the owner's command:** `npm run release -- <project>` (they type the PIN). Never run it yourself.
+5. **Release is the owner's command:** `npm run release -- <project>` (they type the PIN, and type YES to confirm any map). Never run it yourself.
 
 ## What blocks release
 
-Score below 95, any category below 80%, any hard failure, any review stop not approved with the owner's PIN for the current files, a placeholder channel, or a map without the owner's source confirmation.
+Score below 95, any category below 80%, any hard failure, a score that differs from the one approved at stop 5, ratings not saved through the review page, any review stop not approved with the owner's PIN for the current files, a placeholder channel, or a map without the owner's source confirmation.

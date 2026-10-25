@@ -51,8 +51,8 @@ function changedFiles(recorded, current) {
 }
 
 /** Evaluate every entry in order; returns [{id, state, reasons}]. */
-function evaluate(project) {
-  const h = hasher(project);
+function evaluate(project, { useCache = true } = {}) {
+  const h = hasher(project, { useCache });
   const results = [];
   let earlierIncomplete = false;
   STEPS.forEach((entry, index) => {

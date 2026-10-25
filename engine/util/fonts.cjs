@@ -12,6 +12,7 @@ const ROLES = [
   ['Serif', ['georgia.ttf', 'times.ttf']],
   ['SerifBold', ['georgiab.ttf', 'timesbd.ttf']],
   ['Mono', ['consola.ttf', 'cour.ttf']],
+  ['Condensed', ['impact.ttf', 'arialbd.ttf']], // thumbnails: tall, narrow headline type
   ['Deva', ['Nirmala.ttc', 'mangal.ttf']],
   ['DevaBold', ['NirmalaB.ttc', 'Nirmala.ttc', 'mangalb.ttf']],
 ];

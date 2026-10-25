@@ -42,6 +42,14 @@ const COMMANDS = {
           await storyboard(project, { planFile, label: `storyboard-shorts/${short.id}` });
         }
       }
+      if (
+        [1, 2, 3].every((n) =>
+          fs.existsSync(project.path('assets', 'images', `thumb_base_${n}.png`)),
+        )
+      ) {
+        const { composeThumbnails } = require('../package/thumbnails.cjs');
+        await composeThumbnails(project, { draft: true });
+      }
       writeStamp(project, 'storyboard');
       console.log(
         `Storyboard ready: ${out.sheets.length} contact sheet(s). Review at stop 4: npm run review -- ${project.name}`,

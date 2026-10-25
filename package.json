@@ -39,7 +39,9 @@
     "stock:pick": "node tools/studio.cjs stock:pick",
     "preview": "node tools/studio.cjs preview",
     "render": "node tools/studio.cjs render",
-    "shorts": "node tools/studio.cjs shorts"
+    "shorts": "node tools/studio.cjs shorts",
+    "package": "node tools/studio.cjs package",
+    "thumbs:check": "node tools/studio.cjs thumbs:check"
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

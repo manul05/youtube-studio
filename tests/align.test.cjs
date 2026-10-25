@@ -176,3 +176,20 @@ test('alignment refuses paragraph ids that could escape the project folder', asy
   fs.writeFileSync(project.path('script.json'), JSON.stringify(script));
   await assert.rejects(() => alignProject(project, { asr: async () => [] }), /paragraph id/i);
 });
+
+test('unmatchable words like "a" do not count against a paragraph', async () => {
+  const { createProject, openProject } = require('../engine/project.cjs');
+  const { splitChapter } = require('../engine/align/split.cjs');
+  const { run, ffmpegPath } = require('../engine/util/proc.cjs');
+  const projectsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'studio-align-a-'));
+  const project = openProject(createProject('demo', { channel: 'en-placeholder', date: '2026-10-25', projectsDir }));
+  const text = 'A man saw a cat and a dog near a tree in a park on a hill. [[analysis]]';
+  fs.writeFileSync(project.path('script.json'), JSON.stringify({ chapters: [{ id: 1, title: 'x', paragraphs: [{ id: 'c01p01', text, hold: 0.4 }] }] }));
+  const wav = project.path('work', 'voice', 'chapters', 'c01.wav');
+  fs.mkdirSync(path.dirname(wav), { recursive: true });
+  run(ffmpegPath(), ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=f=200:d=7', '-ar', '48000', '-ac', '2', wav]);
+  const tokens = text.replace(/\[\[[^\]]+\]\]/g, '').split(/\s+/).filter(Boolean);
+  const asr = tokens.map((t, i) => ({ text: t, start: 0.2 + i * 0.35, end: 0.45 + i * 0.35 }));
+  const result = await splitChapter(project, 1, { asr: async () => asr });
+  assert.deepEqual(result.issues, []);
+});

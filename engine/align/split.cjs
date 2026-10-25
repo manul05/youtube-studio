@@ -70,7 +70,8 @@ async function splitChapter(project, chapterNumber, { asr = defaultAsr(project) 
   for (let i = 0; i < paragraphs.length; i += 1) {
     const words = chapterMatch.words.slice(offset, offset + tokenCounts[i]);
     offset += tokenCounts[i];
-    const countable = words.filter((w) => w.text.replace(/[^\p{L}\p{N}]/gu, '').length);
+    // Only words the matcher could have matched count (not e.g. "a", which has no sounds-like letters).
+    const countable = words.filter((w) => w.matchable);
     const missed = countable.filter((w) => w.interpolated).length;
     perParagraph.push({ words, ratio: countable.length ? missed / countable.length : 0 });
   }

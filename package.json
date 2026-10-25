@@ -45,7 +45,8 @@
     "qc": "node tools/studio.cjs qc",
     "review:ai": "node tools/studio.cjs review:ai",
     "score": "node tools/studio.cjs score",
-    "release": "node tools/studio.cjs release"
+    "release": "node tools/studio.cjs release",
+    "test:e2e": "node --test --test-timeout=3600000 \"tests/e2e/*.test.cjs\""
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

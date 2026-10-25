@@ -108,6 +108,8 @@ function matchWords(sourceTokens, asrWords, { idPrefix = 'w' } = {}) {
 }
 
 /** Spread runs of untimed words evenly between their timed neighbours. */
+const MIN_FILLED_WORD = 0.08;
+
 function fillGaps(words, asrWords) {
   const first = asrWords.length ? asrWords[0].start : 0;
   const last = asrWords.length ? asrWords[asrWords.length - 1].end : 0;
@@ -119,8 +121,34 @@ function fillGaps(words, asrWords) {
     }
     let end = k;
     while (end < words.length && words[end].start === null) end += 1;
-    const from = k > 0 ? words[k - 1].end : first;
-    const to = end < words.length ? words[end].start : Math.max(last, from);
+    const prev = k > 0 ? words[k - 1] : null;
+    const next = end < words.length ? words[end] : null;
+    let from = prev ? prev.end : first;
+    let to = next ? next.start : Math.max(last, from);
+    // Recogniser words usually touch, so a missed word can have no room at all: borrow up to half
+    // of each neighbour so every word keeps a real duration.
+    let deficit = (end - k) * MIN_FILLED_WORD - (to - from);
+    if (deficit > 0 && prev) {
+      const take = Math.min(next ? deficit / 2 : deficit, (prev.end - prev.start) / 2);
+      from -= take;
+      prev.end = from;
+      deficit -= take;
+    }
+    if (deficit > 0 && next) {
+      const take = Math.min(deficit, (next.end - next.start) / 2);
+      to += take;
+      next.start = to;
+      deficit -= take;
+    }
+    if (deficit > 0 && prev) {
+      const take = Math.min(deficit, prev.end - prev.start - MIN_FILLED_WORD);
+      if (take > 0) {
+        from -= take;
+        prev.end = from;
+        deficit -= take;
+      }
+    }
+    if (deficit > 0 && !next) to += deficit;
     const step = (to - from) / (end - k);
     for (let i = k; i < end; i += 1) {
       words[i].start = from + step * (i - k);

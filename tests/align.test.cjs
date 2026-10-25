@@ -216,3 +216,31 @@ test('unmatchable words like "a" do not count against a paragraph', async () => 
   const result = await splitChapter(project, 1, { asr: async () => asr });
   assert.deepEqual(result.issues, []);
 });
+
+test('a word the recogniser missed between touching words still gets a real duration', () => {
+  const { phrases } = require('../engine/captions/phrases.cjs');
+  for (const [lang, drop] of [
+    ['hi', 3],
+    ['hi', 12],
+    ['en', 3],
+  ]) {
+    const asr = samples[lang].asr.map((w) => ({ ...w }));
+    // A missed word usually shows up as its neighbour stretching over it.
+    asr[drop - 1].end = asr[drop].end;
+    asr.splice(drop, 1);
+    const { words } = matchWords(tokens(samples[lang].text), asr);
+    for (const w of words) {
+      assert.ok(w.end - w.start >= 0.05, `${lang}: "${w.text}" lasts ${w.end - w.start} s`);
+    }
+    for (let i = 1; i < words.length; i += 1) {
+      assert.ok(words[i].start >= words[i - 1].end - 1e-9, `${lang}: words overlap at ${i}`);
+    }
+    const script = lang === 'hi' ? 'devanagari' : 'latin';
+    assert.doesNotThrow(() =>
+      phrases(
+        words.map((w, n) => ({ id: `w${n}`, ...w })),
+        { script },
+      ),
+    );
+  }
+});

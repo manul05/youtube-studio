@@ -5,3 +5,4 @@
 require('../words/pages.cjs');
 require('../voice/pages.cjs');
 require('../render/pages.cjs');
+require('../score/pages.cjs');

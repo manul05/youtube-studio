@@ -8,6 +8,8 @@ const { evaluate, nextAction } = require('../next.cjs');
 const { deriveKey } = require('./pin.cjs');
 const { writeApproval } = require('./approvals.cjs');
 const { pageData } = require('./pages.cjs');
+const { writeJson } = require('../util/files.cjs');
+const { aggregate } = require('../score/aggregate.cjs');
 
 const PAGES_DIR = path.join(__dirname, 'pages');
 const MAX_BODY = 1024 * 1024;
@@ -157,6 +159,62 @@ async function handleApproval(project, gateId, req, res, pinFile) {
   return sendJson(res, 200, { ok: true, decision: approval.decision, at: approval.at });
 }
 
+const LEVEL_NAMES = ['Excellent', 'Good', 'OK', 'Weak', 'Bad'];
+const SAFE_ID = /^[A-Za-z0-9_-]+$/;
+
+/** Owner ratings for stop 5, validated; the only writer of outputs/score/owner.json. */
+async function handleRatings(project, req, res, pinFile) {
+  let body;
+  try {
+    body = JSON.parse(await readBody(req));
+  } catch (err) {
+    return sendJson(res, 400, { error: `Bad request: ${err.message}` });
+  }
+  try {
+    deriveKey(body.pin, { pinFile });
+  } catch (err) {
+    return sendJson(res, 401, { error: err.message });
+  }
+  const pickLevels = (r, questions) => {
+    const out = {};
+    for (const q of questions) {
+      if (!LEVEL_NAMES.includes(r && r[q]))
+        throw new Error(`Rate "${q}" as one of ${LEVEL_NAMES.join(', ')}.`);
+      out[q] = r[q];
+    }
+    return out;
+  };
+  let owner;
+  try {
+    owner = {
+      ...pickLevels(body.ratings, ['A', 'BG', 'D', 'F', 'I']),
+      drags: (Array.isArray(body.drags) ? body.drags : []).filter(
+        (t) => Number.isFinite(t) && t >= 0,
+      ),
+      pick: {
+        thumbnail: [1, 2, 3].includes(body.pick && body.pick.thumbnail) ? body.pick.thumbnail : 1,
+        title: [1, 2, 3].includes(body.pick && body.pick.title) ? body.pick.title : 1,
+      },
+      shorts: {},
+      at: new Date().toISOString(),
+    };
+    for (const [id, r] of Object.entries(body.shorts || {})) {
+      if (SAFE_ID.test(id)) owner.shorts[id] = pickLevels(r, ['A', 'BG', 'D', 'F']);
+    }
+  } catch (err) {
+    return sendJson(res, 400, { error: err.message });
+  }
+  writeJson(project.path('outputs', 'score', 'owner.json'), owner);
+  const score = aggregate(project);
+  return sendJson(res, 200, {
+    ok: true,
+    total: score.total,
+    releasable: score.releasable,
+    explanation: score.explanation,
+    droppedShorts: score.droppedShorts,
+  });
+}
+
 /** Start the loopback-only review server. Resolves to { url, port, close() }. */
 function startServer(project, { port = 8770, pinFile } = {}) {
   let allowedHosts = [];
@@ -175,6 +233,12 @@ function startServer(project, { port = 8770, pinFile } = {}) {
       }
       if (req.method === 'GET' && url.pathname === '/file') {
         return serveProjectFile(project, url.searchParams.get('path'), req, res);
+      }
+      if (
+        req.method === 'POST' &&
+        decodeURIComponent(url.pathname) === '/gate/gate:final/ratings'
+      ) {
+        return handleRatings(project, req, res, pinFile);
       }
       const match = /^\/gate\/([^/]+)$/.exec(url.pathname);
       if (match) {

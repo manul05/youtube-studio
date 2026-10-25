@@ -73,6 +73,89 @@
     },
   };
 
+  // Stop 5: ratings, picks and "this drags" markers, saved with the PIN to /gate/<id>/ratings.
+  const ratings = { long: {}, shorts: {} };
+  const drags = [];
+  const pick = { thumbnail: 1, title: 1 };
+  const LEVELS = ['Excellent', 'Good', 'OK', 'Weak', 'Bad'];
+
+  renderers.form = (s) => {
+    const box = el('div', { class: 'card' });
+    for (const q of s.questions) {
+      box.appendChild(el('div', {}, q.label));
+      const row = box.appendChild(el('div'));
+      for (const level of LEVELS) {
+        const label = row.appendChild(el('label', { style: 'margin-right:12px' }));
+        const input = label.appendChild(
+          el('input', { type: 'radio', name: `${s.target}-${q.id}`, value: level }),
+        );
+        label.appendChild(document.createTextNode(` ${level}`));
+        input.addEventListener('change', () => {
+          const target =
+            s.target === 'long'
+              ? ratings.long
+              : (ratings.shorts[s.target] = ratings.shorts[s.target] || {});
+          target[q.id] = level;
+        });
+      }
+    }
+    return box;
+  };
+  renderers.pick = (s) => {
+    const box = el('div', { class: 'grid' });
+    s.items.forEach((item, i) => {
+      const label = box.appendChild(el('label', { class: 'card' }));
+      const input = label.appendChild(el('input', { type: 'radio', name: `pick-${s.what}` }));
+      if (i === 0) input.checked = true;
+      input.addEventListener('change', () => (pick[s.what] = i + 1));
+      if (item.path) label.appendChild(el('img', { src: fileUrl(item.path), style: 'width:100%' }));
+      label.appendChild(el('div', {}, item.text || ''));
+    });
+    return box;
+  };
+  renderers.drags = () => {
+    const box = el('div', { class: 'card' });
+    const button = box.appendChild(
+      el('button', { type: 'button', class: 'changes' }, 'This drags (mark the current moment)'),
+    );
+    const list = box.appendChild(el('div', { class: 'muted' }, 'No moments marked.'));
+    button.addEventListener('click', () => {
+      const video = document.querySelector('video');
+      if (!video) return;
+      drags.push(Math.round(video.currentTime * 10) / 10);
+      list.textContent = `Marked: ${drags.map((t) => t.toFixed(1) + ' s').join(', ')}`;
+    });
+    return box;
+  };
+  renderers.save = () => {
+    const box = el('div', { class: 'card' });
+    const button = box.appendChild(
+      el('button', { type: 'button', class: 'approve' }, 'Save my ratings and show the score'),
+    );
+    const out = box.appendChild(el('pre', { class: 'muted' }));
+    button.addEventListener('click', async () => {
+      const res = await fetch(`/gate/${encodeURIComponent(data.gate)}/ratings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pin: document.getElementById('pin').value,
+          ratings: ratings.long,
+          shorts: ratings.shorts,
+          drags,
+          pick,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      out.textContent = res.ok
+        ? [
+            `Score ${body.total} — ${body.releasable ? 'ready to release' : 'not releasable yet'}`,
+            ...(body.explanation || []),
+          ].join('\n')
+        : `Not saved: ${body.error || res.status}`;
+    });
+    return box;
+  };
+
   app.appendChild(el('div', { class: 'muted' }, `${data.project} · ${data.gate}`));
   app.appendChild(el('h1', {}, data.title || data.gate));
   if (data.intro) app.appendChild(el('p', { class: 'muted' }, data.intro));

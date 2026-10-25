@@ -184,3 +184,53 @@ test('the file route serves media only, with sandboxing headers', async () => {
     await server.close();
   }
 });
+
+test('final ratings are saved only through the server with the PIN, and are validated', async () => {
+  const pinFile = tempPinFile();
+  setPin('123456', { pinFile });
+  const project = tempProject();
+  fs.mkdirSync(project.path('outputs', 'qc'), { recursive: true });
+  fs.writeFileSync(
+    project.path('outputs', 'qc', 'qc.json'),
+    JSON.stringify({ hardFails: [], issues: [], shorts: {} }),
+  );
+  const server = await startServer(project, { port: 0, pinFile });
+  const post = (body) =>
+    request(`${server.url}/gate/${encodeURIComponent('gate:final')}/ratings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  const ratings = { A: 'Excellent', BG: 'Good', D: 'Excellent', F: 'Excellent', I: 'Good' };
+  try {
+    assert.equal((await post({ pin: '000000', ratings })).status, 401);
+    assert.equal(
+      (await post({ pin: '123456', ratings: { ...ratings, A: 'Amazing' } })).status,
+      400,
+    );
+    const ok = await post({
+      pin: '123456',
+      ratings,
+      drags: [12.5, 'x'],
+      pick: { thumbnail: 2, title: 1 },
+    });
+    assert.equal(ok.status, 200);
+    const owner = JSON.parse(
+      fs.readFileSync(project.path('outputs', 'score', 'owner.json'), 'utf8'),
+    );
+    assert.equal(owner.BG, 'Good');
+    assert.deepEqual(owner.drags, [12.5]);
+    assert.ok(fs.existsSync(project.path('outputs', 'score', 'score.json')));
+  } finally {
+    await server.close();
+  }
+});
+
+test('the review page script is valid JavaScript', () => {
+  const vm = require('node:vm');
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'engine', 'review', 'pages', 'gate.js'),
+    'utf8',
+  );
+  assert.doesNotThrow(() => new vm.Script(source, { filename: 'gate.js' }));
+});

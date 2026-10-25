@@ -4,12 +4,7 @@
       "type": "art-focus",
       "fields": {
         "imagePrompt": "demo",
-        "focus": [
-          0.25,
-          0.2,
-          0.4,
-          0.45
-        ]
+        "focus": [0.25, 0.2, 0.4, 0.45]
       },
       "illustration": true
     },
@@ -18,24 +13,9 @@
       "fields": {
         "imagePrompt": "demo",
         "crops": [
-          [
-            0,
-            0,
-            0.45,
-            0.45
-          ],
-          [
-            0.5,
-            0.1,
-            0.45,
-            0.45
-          ],
-          [
-            0.25,
-            0.5,
-            0.45,
-            0.45
-          ]
+          [0, 0, 0.45, 0.45],
+          [0.5, 0.1, 0.45, 0.45],
+          [0.25, 0.5, 0.45, 0.45]
         ]
       },
       "illustration": true
@@ -75,17 +55,11 @@
       "fields": {
         "left": {
           "title": "Online",
-          "points": [
-            "Millions can share",
-            "Trends in hours"
-          ]
+          "points": ["Millions can share", "Trends in hours"]
         },
         "right": {
           "title": "Offline",
-          "points": [
-            "Fewer can attend",
-            "Takes weeks"
-          ]
+          "points": ["Fewer can attend", "Takes weeks"]
         }
       }
     },
@@ -112,9 +86,7 @@
       "type": "map",
       "fields": {
         "region": "india",
-        "highlight": [
-          "Delhi"
-        ],
+        "highlight": ["Delhi"],
         "pins": [
           {
             "lon": 77.21,
@@ -128,23 +100,14 @@
       "type": "document",
       "fields": {
         "title": "Hearing record",
-        "lines": [
-          "Matter listed for hearing",
-          "Remarks made from the bench"
-        ],
-        "highlight": [
-          1
-        ]
+        "lines": ["Matter listed for hearing", "Remarks made from the bench"],
+        "highlight": [1]
       }
     },
     {
       "type": "list",
       "fields": {
-        "items": [
-          "Exams",
-          "Jobs",
-          "A voice"
-        ]
+        "items": ["Exams", "Jobs", "A voice"]
       }
     },
     {

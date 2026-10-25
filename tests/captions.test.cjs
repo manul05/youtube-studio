@@ -80,3 +80,16 @@ test('a very short phrase is merged instead of flashing on screen', () => {
   assert.ok(cues.every((c) => c.end - c.start >= 0.7 - 1e-9));
   assert.deepEqual(captionIssues(cues, { script: 'latin' }), []);
 });
+
+test('a fast final caption is held a little longer when there is room', () => {
+  const words = [
+    { id: 'a', text: 'People', start: 0, end: 0.3 },
+    { id: 'b', text: 'share', start: 0.38, end: 0.68 },
+    { id: 'c', text: 'everything.', start: 0.76, end: 1.06 },
+    { id: 'd', text: 'anger', start: 1.14, end: 1.44 },
+    { id: 'e', text: 'together', start: 1.52, end: 1.82 },
+    { id: 'f', text: 'online.', start: 1.9, end: 2.2 },
+  ];
+  const cues = phrases(words, { script: 'latin' });
+  assert.deepEqual(captionIssues(cues, { script: 'latin' }), []);
+});

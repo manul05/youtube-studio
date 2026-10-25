@@ -58,7 +58,7 @@ function speechWav(seconds) {
   buf.writeUInt32LE(n * 2, 40);
   for (let i = 0; i < n; i += 1) {
     const t = i / rate;
-    const syllable = (t % SECONDS_PER_WORD) < SECONDS_PER_WORD * 0.75 ? 0.5 : 0.08;
+    const syllable = t % SECONDS_PER_WORD < SECONDS_PER_WORD * 0.75 ? 0.5 : 0.08;
     buf.writeInt16LE(Math.round(9000 * syllable * Math.sin(2 * Math.PI * 170 * t)), 44 + i * 2);
   }
   return buf;
@@ -72,12 +72,28 @@ async function fakeGemini(url, init) {
     const text = body.input[0].content[0].text;
     const seconds = words(text).length * SECONDS_PER_WORD + 0.3;
     const data = speechWav(seconds).toString('base64');
-    return { ok: true, status: 200, json: async () => ({ steps: [{ type: 'model_output', content: [{ type: 'audio', mime_type: 'audio/wav', data }] }] }) };
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        steps: [
+          { type: 'model_output', content: [{ type: 'audio', mime_type: 'audio/wav', data }] },
+        ],
+      }),
+    };
   }
   if (url.includes(':generateContent')) {
     const cats = body.generationConfig.responseSchema.properties.categories.required;
-    const categories = Object.fromEntries(cats.map((c) => [c, { score: 97, reasons: [{ t: 1, note: 'Strong.' }] }]));
-    return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ categories }) }] } }] }) };
+    const categories = Object.fromEntries(
+      cats.map((c) => [c, { score: 97, reasons: [{ t: 1, note: 'Strong.' }] }]),
+    );
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({ categories }) }] } }],
+      }),
+    };
   }
   throw new Error(`Unexpected request ${url}`);
 }
@@ -98,13 +114,51 @@ function setupLibrary() {
   const music = path.join(LIBRARY, 'music');
   fs.mkdirSync(music, { recursive: true });
   for (const [i, f] of [220, 277].entries()) {
-    run(ffmpegPath(), ['-v', 'error', '-y', '-f', 'lavfi', '-i', `sine=f=${f}:d=20`, '-af', 'volume=0.3', '-ar', '48000', '-ac', '2', path.join(music, `bed${i}.wav`)]);
+    run(ffmpegPath(), [
+      '-v',
+      'error',
+      '-y',
+      '-f',
+      'lavfi',
+      '-i',
+      `sine=f=${f}:d=20`,
+      '-af',
+      'volume=0.3',
+      '-ar',
+      '48000',
+      '-ac',
+      '2',
+      path.join(music, `bed${i}.wav`),
+    ]);
   }
-  fs.writeFileSync(path.join(music, 'index.json'), JSON.stringify([0, 1].map((i) => ({ file: `bed${i}.wav`, moods: ['documentary'], licence: 'YouTube Audio Library' }))));
-  for (const [id, language, captionScript] of [['real-en', 'en', 'latin'], ['real-hi', 'hi', 'deva']]) {
+  fs.writeFileSync(
+    path.join(music, 'index.json'),
+    JSON.stringify(
+      [0, 1].map((i) => ({
+        file: `bed${i}.wav`,
+        moods: ['documentary'],
+        licence: 'YouTube Audio Library',
+      })),
+    ),
+  );
+  for (const [id, language, captionScript] of [
+    ['real-en', 'en', 'latin'],
+    ['real-hi', 'hi', 'deva'],
+  ]) {
     const dir = path.join(LIBRARY, 'channels', id);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'channel.json'), JSON.stringify({ name: `Real ${language}`, handle: `@real${language}`, language, captionScript, voice: { name: 'Charon', style: 'calm' }, musicMoods: ['documentary'], placeholder: false }));
+    fs.writeFileSync(
+      path.join(dir, 'channel.json'),
+      JSON.stringify({
+        name: `Real ${language}`,
+        handle: `@real${language}`,
+        language,
+        captionScript,
+        voice: { name: 'Charon', style: 'calm' },
+        musicMoods: ['documentary'],
+        placeholder: false,
+      }),
+    );
   }
 }
 
@@ -113,23 +167,42 @@ const CONTENT = {
     channel: 'real-en',
     language: 'en',
     captionScript: 'latin',
-    titles: ['How one word became a movement', 'The cockroach party explained', 'Why a remark went viral'],
+    titles: [
+      'How one word became a movement',
+      'The cockroach party explained',
+      'Why a remark went viral',
+    ],
     thumbTexts: ['ONE WORD', 'WHY?', 'LAUGH'],
     sentence: (n) =>
       `In May ${2020 + n} a single remark in a crowded courtroom travelled across the country faster than anyone in that room expected it could.`,
-    analysis: 'That speed tells us something important about how young people now share their anger together online.',
-    quote: { text: 'We are not going anywhere.', speaker: 'A student organiser', source: 'Example News', date: '2026-05-21' },
+    analysis:
+      'That speed tells us something important about how young people now share their anger together online.',
+    quote: {
+      text: 'We are not going anywhere.',
+      speaker: 'A student organiser',
+      source: 'Example News',
+      date: '2026-05-21',
+    },
   },
   hi: {
     channel: 'real-hi',
     language: 'hi',
     captionScript: 'deva',
-    titles: ['एक शब्द कैसे आंदोलन बन गया', 'कॉकरोच पार्टी की पूरी कहानी', 'एक टिप्पणी क्यों वायरल हुई'],
+    titles: [
+      'एक शब्द कैसे आंदोलन बन गया',
+      'कॉकरोच पार्टी की पूरी कहानी',
+      'एक टिप्पणी क्यों वायरल हुई',
+    ],
     thumbTexts: ['एक शब्द', 'क्यों?', 'हँसी'],
     sentence: (n) =>
       `मई ${2020 + n} में अदालत की एक टिप्पणी पूरे देश में इतनी तेज़ी से फैली कि वहाँ बैठे किसी ने भी इसकी उम्मीद नहीं की थी।`,
     analysis: 'यह रफ़्तार बताती है कि आज के युवा अपनी नाराज़गी को ऑनलाइन मिलकर कैसे साझा करते हैं।',
-    quote: { text: 'हम कहीं नहीं जा रहे हैं।', speaker: 'एक छात्र आयोजक', source: 'Example News', date: '2026-05-21' },
+    quote: {
+      text: 'हम कहीं नहीं जा रहे हैं।',
+      speaker: 'एक छात्र आयोजक',
+      source: 'Example News',
+      date: '2026-05-21',
+    },
   },
 };
 
@@ -145,14 +218,21 @@ function picture(file, seed, busy = true) {
     for (let i = 0; i < 25; i += 1) {
       g.fillStyle = `hsl(${(i * 37 + seed * 71) % 360}, 65%, ${30 + (i % 5) * 9}%)`;
       g.beginPath();
-      g.arc((i * 211 + seed * 97) % 1600, (i * 131 + seed * 53) % 900, 40 + ((i * seed) % 7) * 18, 0, Math.PI * 2);
+      g.arc(
+        (i * 211 + seed * 97) % 1600,
+        (i * 131 + seed * 53) % 900,
+        40 + ((i * seed) % 7) * 18,
+        0,
+        Math.PI * 2,
+      );
       g.fill();
     }
   } else {
     g.fillStyle = `hsl(${seed * 53 + 180}, 60%, 50%)`;
     g.beginPath();
-    g.arc(1150, 450, 280, 0, Math.PI * 2);
+    g.arc(900 + (seed % 3) * 220, 250 + (seed % 2) * 400, 160 + (seed % 4) * 60, 0, Math.PI * 2);
     g.fill();
+    g.fillRect(seed % 2 ? 1200 : 700, seed % 3 ? 650 : 80, 300, 160);
   }
   fs.writeFileSync(file, c.toBuffer('image/png'));
 }
@@ -185,11 +265,15 @@ function writeFile(project, rel, value) {
 
 function post(url, body) {
   return new Promise((resolve, reject) => {
-    const req = http.request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } }, (res) => {
-      let data = '';
-      res.on('data', (c) => (data += c));
-      res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(data || '{}') }));
-    });
+    const req = http.request(
+      url,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' } },
+      (res) => {
+        let data = '';
+        res.on('data', (c) => (data += c));
+        res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(data || '{}') }));
+      },
+    );
     req.on('error', reject);
     req.end(JSON.stringify(body));
   });
@@ -200,19 +284,38 @@ function post(url, body) {
 async function produce(lang) {
   const c = CONTENT[lang];
   const projectsDir = fs.mkdtempSync(path.join(os.tmpdir(), `studio-e2e-${lang}-`));
-  const project = openProject(createProject(`e2e-${lang}`, { channel: c.channel, date: '2026-10-25', projectsDir }));
+  const project = openProject(
+    createProject(`e2e-${lang}`, { channel: c.channel, date: '2026-10-25', projectsDir }),
+  );
 
   // Words: 3 chapters × 2 paragraphs, each paragraph two tagged sentences.
   const paragraphs = [];
   const script = { chapters: [] };
   // Three beats per paragraph, at one third and two thirds of its words.
   const art = (extra) => ({ type: 'art-focus', focus: [0.2, 0.2, 0.6, 0.6], ...extra });
-  const tour = { type: 'art-tour', crops: [[0, 0, 0.6, 0.6], [0.4, 0.2, 0.6, 0.6], [0.2, 0.4, 0.6, 0.6]] };
+  const tour = {
+    type: 'art-tour',
+    crops: [
+      [0, 0, 0.6, 0.6],
+      [0.4, 0.2, 0.6, 0.6],
+      [0.2, 0.4, 0.6, 0.6],
+    ],
+  };
   const kinetic = (text) => ({ type: 'kinetic', text });
   const list = { type: 'list', items: c.thumbTexts };
-  const stat = { type: 'stat', value: 2000000, label: c.thumbTexts[0], source: 'Example News', claim: 'CL01' };
+  const stat = {
+    type: 'stat',
+    value: 2000000,
+    label: c.thumbTexts[0],
+    source: 'Example News',
+    claim: 'CL01',
+  };
   const quote = { type: 'quote', ...c.quote, claim: 'CL01' };
-  const compare = { type: 'compare', left: { title: c.thumbTexts[0], points: [c.thumbTexts[1]] }, right: { title: c.thumbTexts[2], points: [c.thumbTexts[1]] } };
+  const compare = {
+    type: 'compare',
+    left: { title: c.thumbTexts[0], points: [c.thumbTexts[1]] },
+    right: { title: c.thumbTexts[2], points: [c.thumbTexts[1]] },
+  };
   const beatPlans = [
     [art({ illustration: true }), kinetic(c.titles[0]), list],
     [stat, list, kinetic(c.titles[1])],
@@ -231,14 +334,18 @@ async function produce(lang) {
       const beats = beatPlans[k].map((b, i) => ({
         ...b,
         atWord: Math.round((i * n) / 3),
-        ...(b.type.startsWith('art-') ? { imagePrompt: `Illustrated scene ${k}-${i} of a crowded city square at dusk` } : {}),
+        ...(b.type.startsWith('art-')
+          ? { imagePrompt: `Illustrated scene ${k}-${i} of a crowded city square at dusk` }
+          : {}),
       }));
       chapter.paragraphs.push({ id, text, hold: 0.4, beats });
       paragraphs.push(id);
     }
     script.chapters.push(chapter);
   }
-  const totalWords = script.chapters.flatMap((x) => x.paragraphs).reduce((n, p) => n + words(p.text.replace(/\[\[[^\]]+\]\]/g, '')).length, 0);
+  const totalWords = script.chapters
+    .flatMap((x) => x.paragraphs)
+    .reduce((n, p) => n + words(p.text.replace(/\[\[[^\]]+\]\]/g, '')).length, 0);
   const estimateSec = (totalWords / 155) * 60 + paragraphs.length * 0.4;
 
   // 1 · Idea
@@ -263,15 +370,42 @@ async function produce(lang) {
   // 2–4 · Research, outline, script
   writeFile(project, 'research.json', {
     sources: [
-      { id: 'S01', url: 'https://example.com/report', publisher: 'Example News', published: '2026-05-21', accessed: '2026-10-24', excerpt: 'Supporting excerpt.' },
-      { id: 'S02', url: 'https://example.org/analysis', publisher: 'Example Review', published: '2026-06-02', accessed: '2026-10-24', excerpt: 'Supporting excerpt.' },
+      {
+        id: 'S01',
+        url: 'https://example.com/report',
+        publisher: 'Example News',
+        published: '2026-05-21',
+        accessed: '2026-10-24',
+        excerpt: 'Supporting excerpt.',
+      },
+      {
+        id: 'S02',
+        url: 'https://example.org/analysis',
+        publisher: 'Example Review',
+        published: '2026-06-02',
+        accessed: '2026-10-24',
+        excerpt: 'Supporting excerpt.',
+      },
     ],
-    claims: [{ id: 'CL01', text: 'The remark spread quickly.', status: 'attributed', contested: true, sources: ['S01', 'S02'] }],
+    claims: [
+      {
+        id: 'CL01',
+        text: 'The remark spread quickly.',
+        status: 'attributed',
+        contested: true,
+        sources: ['S01', 'S02'],
+      },
+    ],
   });
   await cli(['research:check', project.dir]);
   const per = Math.round(estimateSec / 3);
   writeFile(project, 'outline.json', {
-    chapters: script.chapters.map((x, i) => ({ id: x.id, title: x.title, purpose: 'Explain', targetSeconds: i === 2 ? Math.round(estimateSec) - 2 * per : per })),
+    chapters: script.chapters.map((x, i) => ({
+      id: x.id,
+      title: x.title,
+      purpose: 'Explain',
+      targetSeconds: i === 2 ? Math.round(estimateSec) - 2 * per : per,
+    })),
     hook: { endsAt: 20 },
     rehooks: [],
     payoff: 'Why it spread.',
@@ -324,9 +458,19 @@ async function produce(lang) {
   try {
     const rating = { A: 'Excellent', BG: 'Excellent', D: 'Excellent', F: 'Excellent' };
     const shorts = Object.fromEntries(['s1', 's2', 's3'].map((id) => [id, rating]));
-    const saved = await post(`${server.url}/gate/${encodeURIComponent('gate:final')}/ratings`, { pin: PIN, ratings: { ...rating, I: 'Excellent' }, shorts, drags: [], pick: { thumbnail: 1, title: 1 } });
+    const saved = await post(`${server.url}/gate/${encodeURIComponent('gate:final')}/ratings`, {
+      pin: PIN,
+      ratings: { ...rating, I: 'Excellent' },
+      shorts,
+      drags: [],
+      pick: { thumbnail: 1, title: 1 },
+    });
     assert.equal(saved.status, 200, JSON.stringify(saved.body));
-    const approved = await post(`${server.url}/gate/${encodeURIComponent('gate:final')}`, { pin: PIN, decision: 'approve', notes: '' });
+    const approved = await post(`${server.url}/gate/${encodeURIComponent('gate:final')}`, {
+      pin: PIN,
+      decision: 'approve',
+      notes: '',
+    });
     assert.equal(approved.status, 200, JSON.stringify(approved.body));
   } finally {
     await server.close();
@@ -339,13 +483,17 @@ async function produce(lang) {
 setupLibrary();
 
 for (const lang of ['en', 'hi']) {
-  test(`a ${lang} project goes from idea to a released 95+ package`, { timeout: 45 * 60 * 1000 }, async () => {
-    const { project, out } = await produce(lang);
-    assert.ok(fs.existsSync(path.join(out.dir, 'master.mp4')));
-    assert.equal(out.score.releasable, true);
-    assert.ok(out.score.total >= 95, `score ${out.score.total}`);
-    const qcReport = readJson(project.path('outputs', 'qc', 'qc.json'));
-    assert.deepEqual(qcReport.hardFails, []);
-    assert.ok(qcReport.metrics.staticLongest <= 6, `static ${qcReport.metrics.staticLongest}`);
-  });
+  test(
+    `a ${lang} project goes from idea to a released 95+ package`,
+    { timeout: 45 * 60 * 1000 },
+    async () => {
+      const { project, out } = await produce(lang);
+      assert.ok(fs.existsSync(path.join(out.dir, 'master.mp4')));
+      assert.equal(out.score.releasable, true);
+      assert.ok(out.score.total >= 95, `score ${out.score.total}`);
+      const qcReport = readJson(project.path('outputs', 'qc', 'qc.json'));
+      assert.deepEqual(qcReport.hardFails, []);
+      assert.ok(qcReport.metrics.staticLongest <= 6, `static ${qcReport.metrics.staticLongest}`);
+    },
+  );
 }

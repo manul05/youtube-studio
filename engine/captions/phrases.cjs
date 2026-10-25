@@ -131,7 +131,31 @@ function phrases(words, { script = 'latin', lineChars } = {}) {
       break;
     }
   }
+  holdForReading(cues, script, chars);
   return cues.map((cue, id) => ({ id, ...cue }));
+}
+
+/**
+ * Keep reading speed at or under the limit: hold a fast cue on screen longer when there is room
+ * before the next cue (up to 1 s after the last word for the final cue); if there is no room,
+ * merge it with the next cue when the two still fit in two lines.
+ */
+function holdForReading(cues, script, chars) {
+  const maxCps = qc().captionMaxCps;
+  for (let i = 0; i < cues.length; i += 1) {
+    const cue = cues[i];
+    const needed = graphemeCount(cue.text) / maxCps;
+    if (cue.end - cue.start >= needed) continue;
+    const next = cues[i + 1];
+    const room = next ? next.start : cue.tokens[cue.tokens.length - 1].end + 1;
+    cue.end = Math.max(cue.end, Math.min(cue.start + needed, room));
+    if (cue.end - cue.start >= needed - 1e-9 || !next) continue;
+    const merged = mergeCues(cue, next, script, chars);
+    if (merged.lines.length <= qc().captionMaxLines) {
+      cues.splice(i, 2, merged);
+      i -= 1;
+    }
+  }
 }
 
 module.exports = { phrases, wrapLines, graphemeCount, lineFits, devanagariLineWidth };

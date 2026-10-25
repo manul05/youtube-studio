@@ -131,3 +131,37 @@ test('a 2 s silent gap inside the narration is a hard failure', { timeout: 60000
   assert.ok(Math.abs(issues[0].t - 3) < 0.2);
   assert.deepEqual(silenceIssues(file, { exempt: [[2.5, 5.5]] }), [], 'exempt windows are ignored');
 });
+
+test(
+  'silence around an intended quiet window only counts what lies outside it',
+  { timeout: 60000 },
+  () => {
+    const file = path.join(tmp(), 'card.wav');
+    run(ffmpegPath(), [
+      '-v',
+      'error',
+      '-y',
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=f=200:d=3',
+      '-f',
+      'lavfi',
+      '-i',
+      'anullsrc=r=48000:cl=stereo:d=3.1',
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=f=200:d=3',
+      '-filter_complex',
+      '[0:a]aformat=channel_layouts=stereo:sample_rates=48000[a];[2:a]aformat=channel_layouts=stereo:sample_rates=48000[c];[a][1:a][c]concat=n=3:v=0:a=1[o]',
+      '-map',
+      '[o]',
+      file,
+    ]);
+    // A 2.5 s chapter card from 3.5 s to 6.0 s: 0.5 s and 0.1 s of silence fall outside it.
+    assert.deepEqual(silenceIssues(file, { exempt: [[3.5, 6.0]] }), []);
+    // A card that covers only a small part leaves 2 s of real silence.
+    assert.equal(silenceIssues(file, { exempt: [[5.0, 6.0]] }).length, 1);
+  },
+);

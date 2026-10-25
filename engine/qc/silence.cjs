@@ -23,14 +23,23 @@ function silenceIssues(audioPath, { exempt = [], noiseDb = -45, minSec = 1.2 } =
   const issues = [];
   starts.forEach((start, i) => {
     const end = ends[i] ?? duration;
-    const covered = exempt.some(([s, e]) => start >= s - 0.05 && end <= e + 0.05);
-    if (covered || end - start < minSec) return;
-    issues.push({
-      category: 'D',
-      hard: true,
-      t: start,
-      message: `Unintended silence of ${(end - start).toFixed(1)} s at ${stamp(start).slice(3, 8)}.`,
-    });
+    // Remove intended quiet windows (chapter cards, endcard); only what remains can be a fault.
+    let pieces = [[start, end]];
+    for (const [s0, e0] of exempt) {
+      pieces = pieces.flatMap(([a, b]) => [
+        ...(a < s0 ? [[a, Math.min(b, s0)]] : []),
+        ...(b > e0 ? [[Math.max(a, e0), b]] : []),
+      ]);
+    }
+    for (const [a, b] of pieces) {
+      if (b - a < minSec) continue;
+      issues.push({
+        category: 'D',
+        hard: true,
+        t: a,
+        message: `Unintended silence of ${(b - a).toFixed(1)} s at ${stamp(a).slice(3, 8)}.`,
+      });
+    }
   });
   return issues;
 }

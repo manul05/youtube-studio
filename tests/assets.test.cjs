@@ -71,7 +71,10 @@ test('image prompts carry the style suffix, the safety rule and target file name
   assert.equal(first.aspect, '16:9');
   assert.ok(prompts.some((p) => p.file === 'thumb_base_1.png'));
   assert.ok(fs.existsSync(project.path('assets', 'IMAGE_PROMPTS.md')));
-  assert.ok(fs.statSync(project.path('assets', 'images')).isDirectory(), 'images folder ready for the agent');
+  assert.ok(
+    fs.statSync(project.path('assets', 'images')).isDirectory(),
+    'images folder ready for the agent',
+  );
 });
 
 test('image checks name each problem exactly', async () => {

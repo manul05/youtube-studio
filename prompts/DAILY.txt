@@ -1,0 +1,15 @@
+Make today's YouTube video with this studio. Read AGENTS.md first and follow it exactly.
+
+Topic: <what the video is about>
+Angle / question it answers: <optional>
+Channel: <channel id from library/channels, e.g. my-english-channel>
+Language: <en | hi | hinglish>   Captions script: <latin | deva>
+Length: <minutes, e.g. 12>
+Formats: <long + 3 Shorts | long only>
+Style: <suggest | a pack id from styles/gallery.html>   Accents: <none | e.g. quote: kinetic>
+Must include: <facts, names, moments the video must cover>
+Avoid: <anything to leave out>
+
+Create the project with `npm run new -- <short-slug> --channel=<channel id>`.
+Then run `npm run next -- <project>` and follow it, step by step, until it asks for my review.
+At each review stop, tell me which stop is ready and wait. If a command exits with code 75, stop and tell me to try again later.

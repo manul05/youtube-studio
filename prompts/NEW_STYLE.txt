@@ -1,0 +1,11 @@
+Create a new style pack for this studio. Read AGENTS.md and docs/STYLE_PACK_GUIDE.md first.
+
+Name and id: <e.g. Paper Cut-out, paper-cutout>
+Look: <describe it, or point to a reference image or a videozero.ai style page>
+Best for: <topics>
+Formats: <long, short>
+
+Copy the closest existing pack, change style.json, redraw the beat types that define the look, list the rest in "fallback".
+Run `npm run style:check -- <id>` and look at styles/<id>/check.jpg after every change; repeat until it passes and looks professional in English and Hindi, 16:9 and 9:16.
+Then run `npm run style:preview -- <id>` and `npm run styles`, and show me the preview.
+Do not copy code or assets from references; use them only to understand the look.

@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const { readJson, writeJson } = require('../util/files.cjs');
-const { run, ffmpegPath } = require('../util/proc.cjs');
+const { run, ffmpegPath, probe } = require('../util/proc.cjs');
 const { stamp } = require('../util/timecode.cjs');
 const { models, loadEnv } = require('../config.cjs');
 const { sentences } = require('../words/text.cjs');
@@ -97,8 +97,11 @@ async function requestReview({ parts, categories, fetch = globalThis.fetch, apiK
   return { categories: parsed.categories };
 }
 
-/** Frames every `every` seconds from a video, tiled 4×3 at 480×270 with timestamps. */
+/** Frames every `every` seconds, tiled 4×3 with timestamps: 480×270 tiles, 270×480 for Shorts. */
 async function frameSheets(video, { every, from = 0, to = Infinity }) {
+  const stream = probe(video).streams.find((s) => s.codec_type === 'video');
+  const portrait = stream && stream.height > stream.width;
+  const [tw, th] = portrait ? [270, 480] : [480, 270];
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'studio-review-'));
   try {
     const args = ['-v', 'error', '-y'];
@@ -108,7 +111,7 @@ async function frameSheets(video, { every, from = 0, to = Infinity }) {
     run(ffmpegPath(), [
       ...args,
       '-vf',
-      `fps=1/${every},scale=480:270`,
+      `fps=1/${every},scale=${tw}:${th}`,
       '-q:v',
       '4',
       path.join(dir, 'f_%05d.jpg'),
@@ -120,13 +123,13 @@ async function frameSheets(video, { every, from = 0, to = Infinity }) {
     const sheets = [];
     for (let start = 0; start < files.length; start += 12) {
       const group = files.slice(start, start + 12);
-      const sheet = createCanvas(1920, Math.ceil(group.length / 4) * 300);
+      const sheet = createCanvas(4 * tw, Math.ceil(group.length / 4) * (th + 30));
       const g = sheet.getContext('2d');
       g.fillStyle = '#000000';
       g.fillRect(0, 0, sheet.width, sheet.height);
       for (let i = 0; i < group.length; i += 1) {
-        const x = (i % 4) * 480;
-        const y = Math.floor(i / 4) * 300;
+        const x = (i % 4) * tw;
+        const y = Math.floor(i / 4) * (th + 30);
         g.drawImage(await loadImage(path.join(dir, group[i])), x, y + 30);
         g.fillStyle = '#ffffff';
         g.font = '22px sans-serif';
@@ -226,4 +229,4 @@ async function aiReview(project, opts = {}) {
   return out;
 }
 
-module.exports = { aiReview, requestReview, schemaFor };
+module.exports = { aiReview, requestReview, schemaFor, frameSheets };

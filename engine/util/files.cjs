@@ -26,8 +26,20 @@ function writeJson(file, value) {
   fs.renameSync(partial, file);
 }
 
+/** SHA-256 of a file, read in 8 MB chunks (whole-file reads fail above 2 GiB). */
 function sha256File(file) {
-  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const hash = crypto.createHash('sha256');
+  const buffer = Buffer.allocUnsafe(8 * 1024 * 1024);
+  const fd = fs.openSync(file, 'r');
+  try {
+    let read;
+    while ((read = fs.readSync(fd, buffer, 0, buffer.length, null)) > 0) {
+      hash.update(buffer.subarray(0, read));
+    }
+  } finally {
+    fs.closeSync(fd);
+  }
+  return hash.digest('hex');
 }
 
 function sha256Text(text) {

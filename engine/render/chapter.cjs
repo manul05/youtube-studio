@@ -115,16 +115,7 @@ async function renderChapter(project, chapterId, opts = {}) {
   const ledgerFile = project.path('assets', 'ledger.json');
   const ledger = fs.existsSync(ledgerFile) ? readJson(ledgerFile) : { images: {}, stock: {} };
 
-  const packs = [...new Set(beats.map((b) => b.style))];
-  const signature = sha256Text(
-    [
-      sha256File(planFile),
-      fs.existsSync(ledgerFile) ? sha256File(ledgerFile) : '',
-      hashTree(rootPath('engine')),
-      ...packs.map((id) => hashTree(loadStyle(id).dir)),
-      fs.existsSync(project.path('assets', 'images')) ? hashImages(project, beats) : '',
-    ].join('|'),
-  );
+  const signature = chapterSignature(project, plan, chapterId, ledger);
 
   const dir = outputDir(project, label);
   ensureDir(dir);
@@ -275,6 +266,50 @@ async function renderChapter(project, chapterId, opts = {}) {
   return { cached: false, file: dest, seconds };
 }
 
+/**
+ * Everything one chapter's frames depend on: its own beats (frames relative to the chapter start,
+ * so an earlier chapter changing length does not matter), their ledger entries, images and word
+ * timings, the brief's style and channel, the engine and the style packs. Editing one chapter
+ * leaves the others cached.
+ */
+function chapterSignature(project, plan, chapterId, ledger) {
+  const chapter = plan.chapters.find((c) => Number(c.id) === Number(chapterId));
+  const origin = chapter.startFrame || 0;
+  const beats = plan.beats.filter((b) => Number(b.chapter) === Number(chapterId));
+  const relative = beats.map((b) => ({
+    ...b,
+    startFrame: b.startFrame - origin,
+    paragraphStartFrame:
+      b.paragraphStartFrame === undefined ? undefined : b.paragraphStartFrame - origin,
+  }));
+  const assetIds = beats.map((b) => b.sourceBeat || b.id);
+  const pick = (table) => assetIds.map((id) => (table && table[id]) || null);
+  const alignFiles = [...new Set(beats.map((b) => b.paragraph).filter(Boolean))]
+    .map((id) => project.path('work', 'align', `${id}.json`))
+    .map((f) => (fs.existsSync(f) ? sha256File(f) : 'missing'));
+  const logo = beats.some((b) => b.type === 'endcard') ? channelLogo(project.brief.channel) : null;
+  const packs = [...new Set(beats.map((b) => b.style))];
+  return sha256Text(
+    [
+      JSON.stringify({
+        format: plan.format,
+        fps: plan.fps,
+        width: plan.width,
+        height: plan.height,
+        frames: chapter.frames,
+        beats: relative,
+        ledger: { images: pick(ledger.images), stock: pick(ledger.stock) },
+        style: project.brief.style,
+      }),
+      ...alignFiles,
+      logo && fs.existsSync(logo) ? sha256File(logo) : '',
+      hashTree(rootPath('engine')),
+      ...packs.map((id) => hashTree(loadStyle(id).dir)),
+      fs.existsSync(project.path('assets', 'images')) ? hashImages(project, beats) : '',
+    ].join('|'),
+  );
+}
+
 function hashImages(project, beats) {
   return sha256Text(
     beats
@@ -326,4 +361,10 @@ if (require.main === module) {
   );
 }
 
-module.exports = { renderChapter, hashTree, loadBeatAssets, beatWords };
+module.exports = {
+  chapterSignature,
+  renderChapter,
+  hashTree,
+  loadBeatAssets,
+  beatWords,
+};

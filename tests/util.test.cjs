@@ -39,3 +39,23 @@ test('registerFonts registers a Devanagari role backed by Nirmala UI', () => {
   assert.ok(deva, 'Deva role registered');
   assert.match(deva.path, /Nirmala\.ttc$/i);
 });
+
+test('file hashes are read in chunks, so masters over 2 GiB can be hashed', () => {
+  const crypto = require('node:crypto');
+  const { sha256File } = require('../engine/util/files.cjs');
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'studio-hash-')), 'big.bin');
+  const data = crypto.randomBytes(3 * 1024 * 1024 + 17);
+  fs.writeFileSync(file, data);
+  const expected = crypto.createHash('sha256').update(data).digest('hex');
+  const real = fs.readFileSync;
+  // Node refuses to read a whole file above 2 GiB; simulate that limit for this file.
+  fs.readFileSync = (f, ...rest) => {
+    if (f === file) throw Object.assign(new Error('too large'), { code: 'ERR_FS_FILE_TOO_LARGE' });
+    return real(f, ...rest);
+  };
+  try {
+    assert.equal(sha256File(file), expected);
+  } finally {
+    fs.readFileSync = real;
+  }
+});

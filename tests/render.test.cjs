@@ -156,3 +156,42 @@ test('renderAll renders chapters in child processes and joins them', async () =>
   const video = probe(out.file).streams.find((s) => s.codec_type === 'video');
   assert.equal(Number(video.nb_frames), 45);
 });
+
+test('a chapter render is reused when only another chapter changed', () => {
+  const { chapterSignature } = require('../engine/render/chapter.cjs');
+  const project = chapterProject();
+  const plan = JSON.parse(fs.readFileSync(project.path('beats.json'), 'utf8'));
+  plan.chapters.push({ id: 2, title: 'Two', startFrame: 45, frames: 20 });
+  plan.beats.push({
+    id: 'c02p01b0',
+    chapter: 2,
+    paragraph: 'c02p01',
+    type: 'kinetic',
+    startFrame: 45,
+    frames: 20,
+    paragraphStartFrame: 45,
+    lead: 0.18,
+    fields: { text: 'Third' },
+    style: 'fixture',
+  });
+  plan.beats[1].paragraph = 'c01p01';
+  plan.beats[1].paragraphStartFrame = 20;
+  const ledger = { images: {}, stock: {} };
+  const alignFile = project.path('work', 'align', 'c01p01.json');
+  fs.mkdirSync(path.dirname(alignFile), { recursive: true });
+  fs.writeFileSync(alignFile, JSON.stringify({ words: [{ text: 'a', start: 0, end: 0.3 }] }));
+  const sig = (p, l = ledger) => chapterSignature(project, p, 1, l);
+  const before = sig(plan);
+
+  const otherChapter = structuredClone(plan);
+  otherChapter.beats[2].fields.text = 'Changed';
+  otherChapter.beats[2].frames = 30;
+  assert.equal(sig(otherChapter), before, 'editing chapter 2 keeps chapter 1 cached');
+
+  const ownBeat = structuredClone(plan);
+  ownBeat.beats[0].fields.text = 'Changed';
+  assert.notEqual(sig(ownBeat), before);
+  assert.notEqual(sig(plan, { images: {}, stock: { c01p01b0: { file: 'x.mp4' } } }), before);
+  fs.writeFileSync(alignFile, JSON.stringify({ words: [{ text: 'a', start: 0.1, end: 0.3 }] }));
+  assert.notEqual(sig(plan), before, 'new word timings re-render the chapter');
+});

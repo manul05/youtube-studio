@@ -102,3 +102,22 @@ test('a rate-limited review reports RateLimited so the command can exit 75', asy
     (err) => err instanceof RateLimited,
   );
 });
+
+test('Shorts are reviewed on portrait frames, not squeezed into 16:9 tiles', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { loadImage } = require('@napi-rs/canvas');
+  const { run, ffmpegPath } = require('../engine/util/proc.cjs');
+  const { frameSheets } = require('../engine/score/ai-review.cjs');
+  const clip = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'studio-sheet-')), 'short.mp4');
+  run(ffmpegPath(), [
+    ...['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc=size=216x384:rate=30:duration=4'],
+    ...['-pix_fmt', 'yuv420p', clip],
+  ]);
+  const [sheet] = await frameSheets(clip, { every: 1 });
+  const image = await loadImage(Buffer.from(sheet, 'base64'));
+  const tileWidth = image.width / 4;
+  const tileHeight = image.height - 30;
+  assert.ok(tileHeight > tileWidth, `tiles are ${tileWidth}×${tileHeight}`);
+});

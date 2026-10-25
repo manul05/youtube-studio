@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
-const { readJson, writeJson } = require('../util/files.cjs');
+const { readJson, writeJson, ensureDir } = require('../util/files.cjs');
 const { loadStyle } = require('../styles/loader.cjs');
 
 const SAFETY_RULE =
@@ -42,6 +42,7 @@ function writeImagePrompts(project) {
     });
   }
   writeJson(project.path('assets', 'image_prompts.json'), prompts);
+  ensureDir(project.path('assets', 'images'));
   const md = [
     `# Image prompts for ${project.name}`,
     '',

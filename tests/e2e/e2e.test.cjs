@@ -205,21 +205,35 @@ async function produce(lang) {
   // Words: 3 chapters × 2 paragraphs, each paragraph two tagged sentences.
   const paragraphs = [];
   const script = { chapters: [] };
+  // Three beats per paragraph, at one third and two thirds of its words.
+  const art = (extra) => ({ type: 'art-focus', focus: [0.2, 0.2, 0.6, 0.6], ...extra });
+  const tour = { type: 'art-tour', crops: [[0, 0, 0.6, 0.6], [0.4, 0.2, 0.6, 0.6], [0.2, 0.4, 0.6, 0.6]] };
+  const kinetic = (text) => ({ type: 'kinetic', text });
+  const list = { type: 'list', items: c.thumbTexts };
+  const stat = { type: 'stat', value: 2000000, label: c.thumbTexts[0], source: 'Example News', claim: 'CL01' };
+  const quote = { type: 'quote', ...c.quote, claim: 'CL01' };
+  const compare = { type: 'compare', left: { title: c.thumbTexts[0], points: [c.thumbTexts[1]] }, right: { title: c.thumbTexts[2], points: [c.thumbTexts[1]] } };
   const beatPlans = [
-    [{ type: 'art-focus', atWord: 0, focus: [0.2, 0.2, 0.6, 0.6], illustration: true }, { type: 'kinetic', atWord: 12, text: c.titles[0] }],
-    [{ type: 'stat', atWord: 0, value: 2000000, label: c.thumbTexts[0], source: 'Example News', claim: 'CL01' }, { type: 'list', atWord: 10, items: c.thumbTexts }],
-    [{ type: 'art-tour', atWord: 0, crops: [[0, 0, 0.6, 0.6], [0.4, 0.2, 0.6, 0.6], [0.2, 0.4, 0.6, 0.6]] }],
-    [{ type: 'quote', atWord: 0, ...c.quote, claim: 'CL01' }, { type: 'art-focus', atWord: 14, focus: [0.3, 0.1, 0.6, 0.7] }],
-    [{ type: 'compare', atWord: 0, left: { title: c.thumbTexts[0], points: [c.thumbTexts[1]] }, right: { title: c.thumbTexts[2], points: [c.thumbTexts[1]] } }, { type: 'kinetic', atWord: 12, text: c.titles[1] }],
-    [{ type: 'art-focus', atWord: 0, focus: [0.25, 0.25, 0.55, 0.55] }, { type: 'list', atWord: 10, items: c.thumbTexts }],
+    [art({ illustration: true }), kinetic(c.titles[0]), list],
+    [stat, list, kinetic(c.titles[1])],
+    [tour, quote, compare],
+    [quote, art(), kinetic(c.titles[2])],
+    [compare, kinetic(c.titles[0]), tour],
+    [art(), list, kinetic(c.titles[1])],
   ];
   for (let ch = 1; ch <= 3; ch += 1) {
     const chapter = { id: ch, title: c.titles[ch - 1], paragraphs: [] };
     for (let p = 1; p <= 2; p += 1) {
       const id = `c0${ch}p0${p}`;
       const k = (ch - 1) * 2 + (p - 1);
-      const beats = beatPlans[k].map((b) => (b.type.startsWith('art-') ? { ...b, imagePrompt: `Illustrated scene ${k} of a crowded city square at dusk` } : b));
-      chapter.paragraphs.push({ id, text: `${c.sentence(k)} [[CL01]] ${c.analysis} [[analysis]]`, hold: 0.4, beats });
+      const text = `${c.sentence(k)} [[CL01]] ${c.analysis} [[analysis]]`;
+      const n = words(text.replace(/[[[^]]+]]/g, '')).length;
+      const beats = beatPlans[k].map((b, i) => ({
+        ...b,
+        atWord: Math.round((i * n) / 3),
+        ...(b.type.startsWith('art-') ? { imagePrompt: `Illustrated scene ${k}-${i} of a crowded city square at dusk` } : {}),
+      }));
+      chapter.paragraphs.push({ id, text, hold: 0.4, beats });
       paragraphs.push(id);
     }
     script.chapters.push(chapter);

@@ -144,12 +144,15 @@ function holdForReading(cues, script, chars) {
   const maxCps = qc().captionMaxCps;
   for (let i = 0; i < cues.length; i += 1) {
     const cue = cues[i];
-    const needed = graphemeCount(cue.text) / maxCps;
-    if (cue.end - cue.start >= needed) continue;
+    const count = graphemeCount(cue.text);
+    const readable = (c) => count / (c.end - c.start) <= maxCps;
+    if (readable(cue)) continue;
     const next = cues[i + 1];
     const room = next ? next.start : cue.tokens[cue.tokens.length - 1].end + 1;
-    cue.end = Math.max(cue.end, Math.min(cue.start + needed, room));
-    if (cue.end - cue.start >= needed - 1e-9 || !next) continue;
+    // Round up to the next whole millisecond (+1 ms) so the cue stays readable after SRT export.
+    const target = Math.ceil((cue.start + count / maxCps) * 1000 + 1) / 1000;
+    cue.end = Math.max(cue.end, Math.min(target, room));
+    if (readable(cue) || !next) continue;
     const merged = mergeCues(cue, next, script, chars);
     if (merged.lines.length <= qc().captionMaxLines) {
       cues.splice(i, 2, merged);

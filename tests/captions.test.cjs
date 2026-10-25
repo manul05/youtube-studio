@@ -93,3 +93,24 @@ test('a fast final caption is held a little longer when there is room', () => {
   const cues = phrases(words, { script: 'latin' });
   assert.deepEqual(captionIssues(cues, { script: 'latin' }), []);
 });
+
+test('a held caption stays within the reading speed wherever it sits in the video', () => {
+  const base = [
+    ['People', 0, 0.3],
+    ['share', 0.38, 0.68],
+    ['everything.', 0.76, 1.06],
+    ['anger', 1.14, 1.44],
+    ['together', 1.52, 1.82],
+    ['online.', 1.9, 2.2],
+  ];
+  for (const offset of [2.192, 2.74, 3.288, 37.3, 612.45]) {
+    const words = base.map(([text, start, end], i) => ({
+      id: `w${i}`,
+      text,
+      start: start + offset,
+      end: end + offset,
+    }));
+    const cues = phrases(words, { script: 'latin' });
+    assert.deepEqual(captionIssues(cues, { script: 'latin' }), [], `offset ${offset}`);
+  }
+});

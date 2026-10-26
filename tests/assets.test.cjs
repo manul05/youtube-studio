@@ -299,8 +299,17 @@ test('stock search refuses a beat id that would reach outside the project before
   fs.mkdirSync(victim, { recursive: true });
   fs.writeFileSync(path.join(victim, 'keep.txt'), 'keep');
   await assert.rejects(
-    () => searchStock(project, { fetch: async () => ({ ok: false }), env: {} }),
+    () =>
+      searchStock(project, { fetch: async () => ({ ok: false }), env: { PEXELS_API_KEY: 'p' } }),
     /Invalid beat id/,
   );
   assert.ok(fs.existsSync(path.join(victim, 'keep.txt')));
+});
+
+test('stock search without any stock key says to use AI images instead', async () => {
+  const project = projectWithPlan([{ id: 's1', type: 'stock', fields: { query: 'crowd' } }]);
+  await assert.rejects(
+    () => searchStock(project, { fetch: async () => ({ ok: false }), env: {} }),
+    /No stock video key/,
+  );
 });

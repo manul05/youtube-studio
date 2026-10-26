@@ -17,7 +17,7 @@ const COMMANDS = {
       const { doctor } = require('../engine/doctor.cjs');
       const report = await doctor();
       for (const c of report.checks)
-        console.log(`${c.ok ? 'OK  ' : 'FAIL'} ${c.name}: ${c.detail}`);
+        console.log(`${c.warn ? 'WARN' : c.ok ? 'OK  ' : 'FAIL'} ${c.name}: ${c.detail}`);
       console.log(report.ok ? '\nAll checks passed.' : '\nSome checks failed (see above).');
       return report.ok ? 0 : 1;
     },

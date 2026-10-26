@@ -139,6 +139,11 @@ async function contactSheet(dir, count) {
  */
 async function searchStock(project, { fetch = globalThis.fetch, env = loadEnv() } = {}) {
   const plan = readJson(project.path('beats.json'));
+  if (plan.beats.some((b) => b.type === 'stock') && !env.PEXELS_API_KEY && !env.PIXABAY_API_KEY) {
+    throw new Error(
+      'No stock video key in .env (PEXELS_API_KEY or PIXABAY_API_KEY): replace stock beats with art beats, or ask the owner to add a key.',
+    );
+  }
   const portrait = plan.format === 'short';
   const minimum = portrait ? [1080, 1920] : [1920, 1080];
   const results = [];

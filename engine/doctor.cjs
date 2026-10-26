@@ -75,6 +75,11 @@ async function keyChecks({ fetch, env, writeModels }) {
   const checks = [];
   const missing = (key, name) =>
     check(name, false, `${key} is not set in .env. Get a free key at ${SIGN_UP[key]}`);
+  // Stock video is optional: without a key, stock search is off and videos use AI images.
+  const optional = (key, name) => ({
+    ...check(name, true, `${key} is not set (optional; stock search is off). Key: ${SIGN_UP[key]}`),
+    warn: true,
+  });
 
   if (!env.GEMINI_API_KEY) {
     checks.push(missing('GEMINI_API_KEY', 'gemini-key'));
@@ -117,7 +122,7 @@ async function keyChecks({ fetch, env, writeModels }) {
   }
 
   if (!env.PEXELS_API_KEY) {
-    checks.push(missing('PEXELS_API_KEY', 'pexels-key'));
+    checks.push(optional('PEXELS_API_KEY', 'pexels-key'));
   } else {
     const res = await fetch('https://api.pexels.com/videos/search?query=city&per_page=1', {
       headers: { Authorization: env.PEXELS_API_KEY },
@@ -128,7 +133,7 @@ async function keyChecks({ fetch, env, writeModels }) {
   }
 
   if (!env.PIXABAY_API_KEY) {
-    checks.push(missing('PIXABAY_API_KEY', 'pixabay-key'));
+    checks.push(optional('PIXABAY_API_KEY', 'pixabay-key'));
   } else {
     const res = await fetch(
       `https://pixabay.com/api/videos/?key=${env.PIXABAY_API_KEY}&q=city&per_page=3`,

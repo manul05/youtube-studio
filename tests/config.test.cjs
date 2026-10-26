@@ -84,3 +84,17 @@ test('doctor reports a rejected Gemini key as a failed check without throwing', 
   assert.match(gemini.detail, /401/);
   assert.equal(report.ok, false);
 });
+
+test('stock video keys are optional: missing ones are a warning, not a failure', async () => {
+  const report = await doctor({
+    fetch: async () => ({ ok: false, status: 401, json: async () => ({}) }),
+    env: { GEMINI_API_KEY: 'g' },
+    writeModels: false,
+  });
+  for (const name of ['pexels-key', 'pixabay-key']) {
+    const c = report.checks.find((x) => x.name === name);
+    assert.equal(c.ok, true, `${name} does not fail`);
+    assert.equal(c.warn, true, `${name} is shown as a warning`);
+    assert.match(c.detail, /optional/);
+  }
+});

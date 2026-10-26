@@ -64,6 +64,19 @@ function musicCredits(project) {
     .map((t) => t.attributionText || t.file);
 }
 
+/** Credit lines for stock photos the video shows whose licence asks for attribution. */
+function photoCredits(project) {
+  const plan = readJson(project.path('beats.json'));
+  const ledgerFile = project.path('assets', 'ledger.json');
+  const images = fs.existsSync(ledgerFile) ? readJson(ledgerFile).images || {} : {};
+  const lines = plan.beats
+    .filter((b) => b.fields && b.fields.photoQuery)
+    .map((b) => images[`img_${b.id}.png`])
+    .filter((e) => e && e.attributionRequired)
+    .map((e) => `${e.credit}: ${e.url}`);
+  return [...new Set(lines)];
+}
+
 /** Description, titles, tags, pinned comment and disclosure in outputs/package/. */
 function writeDescription(project) {
   const brief = project.brief;
@@ -71,6 +84,8 @@ function writeDescription(project) {
   const dir = project.path('outputs', 'package');
   ensureDir(dir);
   const credits = musicCredits(project);
+  const photos = photoCredits(project);
+  const usesPhotos = plan.beats.some((b) => b.fields && b.fields.photoQuery);
   const description = [
     brief.hook,
     '',
@@ -81,9 +96,10 @@ function writeDescription(project) {
     '',
     'Sources:',
     ...usedSources(project).map((s) => `- ${s.publisher}, ${s.published}: ${s.url}`),
+    ...(photos.length ? ['', 'Photos:', ...photos.map((c) => `- ${c}`)] : []),
     ...(credits.length ? ['', 'Music:', ...credits.map((c) => `- ${c}`)] : []),
     '',
-    'Illustrations are AI-generated; narration uses a synthetic voice. Dates and claims are as reported by the sources above.',
+    `${usesPhotos ? 'Illustrations are AI-generated and stock photos are credited where required' : 'Illustrations are AI-generated'}; narration uses a synthetic voice. Dates and claims are as reported by the sources above.`,
   ].join('\n');
   fs.writeFileSync(path.join(dir, 'description.txt'), `${description}\n`);
   fs.writeFileSync(path.join(dir, 'titles.txt'), `${brief.titles.join('\n')}\n`);
@@ -108,6 +124,7 @@ module.exports = {
   chapterLines,
   chapterIssues,
   disclosure,
+  photoCredits,
   usedSources,
   timestamp,
 };

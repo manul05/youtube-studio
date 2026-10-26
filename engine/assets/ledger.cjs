@@ -4,7 +4,10 @@ const fs = require('node:fs');
 const { readJson, writeJson, sha256File } = require('../util/files.cjs');
 const { readPrompts } = require('./prompts.cjs');
 
+const { licenceAllowed } = require('./licences.cjs');
+
 const ORIGIN = /^(agent-generated:[a-z0-9-]+|owner-supplied|legacy-antigravity)$/;
+const PHOTO_ORIGIN = /^stock-photo:(wikimedia|pixabay)$/;
 
 function readLedger(project) {
   const file = project.path('assets', 'ledger.json');
@@ -26,6 +29,7 @@ function recordImages(project, { origin }) {
   const ledger = readLedger(project);
   let added = 0;
   for (const entry of readPrompts(project)) {
+    if (entry.stockPhoto) continue; // photos:pick records stock photos with their licence
     const rel = `assets/images/${entry.file}`;
     if (!fs.existsSync(project.path(rel))) continue;
     const sha = sha256File(project.path(rel));
@@ -44,7 +48,20 @@ function ledgerIssues(project) {
   const ledger = readLedger(project);
   const issues = [];
   for (const beat of plan.beats) {
-    if (beat.fields && beat.fields.imagePrompt) {
+    if (beat.fields && beat.fields.photoQuery) {
+      const name = `img_${beat.id}.png`;
+      const entry = ledger.images[name];
+      const file = project.path('assets', 'images', name);
+      if (!entry || !PHOTO_ORIGIN.test(entry.origin || '')) {
+        issues.push(`${beat.id}: no stock photo picked (npm run photos:search, then photos:pick).`);
+      } else if (!licenceAllowed(entry.licence)) {
+        issues.push(
+          `${beat.id}: photo licence "${entry.licence}" is not allowed (use CC0, public domain, CC BY, CC BY-SA or Pixabay).`,
+        );
+      } else if (fs.existsSync(file) && sha256File(file) !== entry.sha256) {
+        issues.push(`${beat.id}: photo changed since it was picked (pick it again).`);
+      }
+    } else if (beat.fields && beat.fields.imagePrompt) {
       const name = `img_${beat.id}.png`;
       const entry = ledger.images[name];
       const file = project.path('assets', 'images', name);

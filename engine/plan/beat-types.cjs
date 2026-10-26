@@ -12,18 +12,18 @@ const O = 'optional';
 
 const BEAT_TYPES = Object.freeze({
   'art-focus': {
-    fields: { imagePrompt: R, focus: R, reverse: O },
+    fields: { imagePrompt: O, photoQuery: O, focus: R, reverse: O },
     minSec: 2,
     maxSec: 6,
     internalReveals: false,
-    use: 'One AI image; the camera moves purposefully to a named region.',
+    use: 'One AI image (imagePrompt) or stock photo (photoQuery); the camera moves to a named region.',
   },
   'art-tour': {
-    fields: { imagePrompt: R, crops: R },
+    fields: { imagePrompt: O, photoQuery: O, crops: R },
     minSec: 4,
     maxSec: 14,
     internalReveals: true,
-    use: 'One AI image explored through 2–4 detail crops (a new crop every 2–4 s).',
+    use: 'One AI image or stock photo explored through 2–4 detail crops (a new crop every 2–4 s).',
   },
   stock: {
     fields: { query: R, inSec: O, lowerThird: O },
@@ -118,4 +118,8 @@ const BEAT_TYPES = Object.freeze({
   },
 });
 
-module.exports = { BEAT_TYPES };
+/** Art beats show one picture: an AI image (imagePrompt) or a stock photo (photoQuery). */
+const usesImage = (beat) =>
+  Boolean(beat.fields && (beat.fields.imagePrompt || beat.fields.photoQuery));
+
+module.exports = { BEAT_TYPES, usesImage };

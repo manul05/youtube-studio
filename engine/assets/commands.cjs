@@ -6,6 +6,7 @@ const { writeImagePrompts } = require('./prompts.cjs');
 const { checkImages } = require('./images-check.cjs');
 const { recordImages, ledgerIssues } = require('./ledger.cjs');
 const { searchStock, pickStock } = require('./stock.cjs');
+const { searchPhotos, pickPhoto } = require('./photos.cjs');
 
 function projectFrom(positional) {
   if (!positional[0])
@@ -61,6 +62,28 @@ const COMMANDS = {
           `${r.beat} ("${r.query}"): ${r.candidates} candidate(s) — view assets/stock/_incoming/${r.beat}/candidates.jpg`,
         );
       }
+      return 0;
+    },
+  },
+  'photos:search': {
+    summary:
+      'Download up to 6 freely licensed photos per photo beat (Wikimedia Commons, Pixabay) to choose from.',
+    run: async ({ positional }) => {
+      const project = projectFrom(positional);
+      for (const r of await searchPhotos(project)) {
+        console.log(
+          `${r.beat} ("${r.query}"): ${r.candidates} candidate(s) — view assets/photos/_incoming/${r.beat}/candidates.jpg`,
+        );
+      }
+      return 0;
+    },
+  },
+  'photos:pick': {
+    summary: 'Keep a photo candidate: npm run photos:pick -- <project> <beat-id> <1-6>',
+    run: async ({ positional }) => {
+      const project = projectFrom(positional);
+      const photo = await pickPhoto(project, positional[1], positional[2]);
+      console.log(`Picked ${photo.file}: ${photo.credit}.`);
       return 0;
     },
   },

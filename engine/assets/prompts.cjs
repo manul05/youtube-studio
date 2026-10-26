@@ -19,6 +19,16 @@ function writeImagePrompts(project) {
   const brief = project.brief;
   const prompts = [];
   for (const beat of plan.beats) {
+    if (beat.fields && beat.fields.photoQuery) {
+      // A stock photo: chosen with photos:search and photos:pick, never generated.
+      prompts.push({
+        file: `img_${beat.id}.png`,
+        stockPhoto: true,
+        query: beat.fields.photoQuery,
+        beatIds: [beat.id],
+      });
+      continue;
+    }
     if (!beat.fields || !beat.fields.imagePrompt) continue;
     const suffix = loadStyle(beat.style).meta.imagePromptSuffix;
     prompts.push({
@@ -42,6 +52,18 @@ function writeImagePrompts(project) {
     });
   }
   writeJson(project.path('assets', 'image_prompts.json'), prompts);
+  const generate = prompts.filter((p) => !p.stockPhoto);
+  const photos = prompts.filter((p) => p.stockPhoto);
+  const photoSection = [
+    '## Stock photos (do not generate these)',
+    '',
+    `Run \`npm run photos:search -- ${project.name}\`, look at each candidates.jpg in ` +
+      `assets/photos/_incoming/<beat-id>/, then \`npm run photos:pick -- ${project.name} ` +
+      '<beat-id> <number>`.',
+    '',
+    ...photos.map((p) => `- ${p.file}: "${p.query}"`),
+    '',
+  ];
   ensureDir(project.path('assets', 'images'));
   const md = [
     `# Image prompts for ${project.name}`,
@@ -51,7 +73,8 @@ function writeImagePrompts(project) {
       `\`npm run images:record -- ${project.name} --origin=agent-generated:<your-agent>\` ` +
       `and \`npm run images:check -- ${project.name}\`.`,
     '',
-    ...prompts.flatMap((p, i) => [`## ${i + 1}. ${p.file}`, '', p.prompt, '']),
+    ...generate.flatMap((p, i) => [`## ${i + 1}. ${p.file}`, '', p.prompt, '']),
+    ...(photos.length ? photoSection : []),
   ].join('\n');
   fs.writeFileSync(project.path('assets', 'IMAGE_PROMPTS.md'), md);
   return prompts;

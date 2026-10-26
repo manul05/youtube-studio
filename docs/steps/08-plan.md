@@ -12,8 +12,8 @@ Run `npm run beats` for every type with its fields and limits. In short:
 
 | Type | Use it for |
 |---|---|
-| `art-focus` | One AI image; the camera moves to `focus` [x, y, w, h]. ≤ 6 s. |
-| `art-tour` | One image, 2–4 `crops` in turn. Longer passages. |
+| `art-focus` | One AI image (`imagePrompt`) or real photo (`photoQuery`); the camera moves to `focus` [x, y, w, h]. ≤ 6 s. |
+| `art-tour` | One AI image or real photo, 2–4 `crops` in turn. Longer passages. |
 | `stock` | Real-world footage from Pexels/Pixabay (`query`). |
 | `kinetic` | A key phrase as big type, revealed on the voice. |
 | `quote` | An attributed quotation with `speaker`, `source`, `date` (needs a claim). |
@@ -34,6 +34,8 @@ Chapter cards and the endcard are added automatically.
 - Factual beats (`quote`, `stat`, `timeline`, `document`, `chart`) need `"claim": "CLxx"`.
 - AI art of real events: `"illustration": true`.
 - `imagePrompt`: describe the scene, composition and subject; no photorealistic real people; no text in the image. The style's look is added automatically.
+- `photoQuery` (instead of `imagePrompt` on `art-focus` / `art-tour`): a real photo from Wikimedia Commons or Pixabay. Use it for real people, buildings, places and documented events — e.g. `"Supreme Court of India building"`. Keep the query short and concrete. One of the two per art beat, never both.
+- `stock` beats need a Pexels or Pixabay key (`npm run doctor`); without one, use art beats.
 - Put the key visual exactly when the narrator says the key word (`atWord`).
 
 ## Done when

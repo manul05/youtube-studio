@@ -69,7 +69,11 @@ async function checkImages(project) {
     const file = path.join(dir, entry.file);
     const flag = (problem) => problems.push({ file: entry.file, problem });
     if (!fs.existsSync(file)) {
-      flag('missing — generate it from assets/IMAGE_PROMPTS.md');
+      flag(
+        entry.stockPhoto
+          ? `missing — run npm run photos:search -- ${project.name}, then photos:pick`
+          : 'missing — generate it from assets/IMAGE_PROMPTS.md',
+      );
       continue;
     }
     let bytes = fs.readFileSync(file);

@@ -34,6 +34,7 @@ function paceForShorts(beat) {
     type: 'art-tour',
     fields: {
       imagePrompt: beat.fields.imagePrompt,
+      photoQuery: beat.fields.photoQuery,
       crops: [
         [0, 0, 1, 1],
         [x, y, w, h],

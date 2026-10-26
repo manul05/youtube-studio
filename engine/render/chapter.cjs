@@ -18,6 +18,7 @@ const { createFrameCanvas } = require('./context.cjs');
 const { openVideoSource } = require('./video-source.cjs');
 const { loadStyle, styleForBeat } = require('../styles/loader.cjs');
 const { drawCaptions } = require('./captions-overlay.cjs');
+const { usesImage } = require('../plan/beat-types.cjs');
 
 const CROSSFADE_FRAMES = 9; // 0.3 s at 30 fps
 
@@ -75,7 +76,7 @@ async function loadBeatAssets(project, beat, plan, ledger) {
   const assets = { image: null, video: null, logo: null };
   // A Short's beat re-uses the image or clip of the long-form beat it came from.
   const assetId = beat.sourceBeat || beat.id;
-  if (beat.fields && beat.fields.imagePrompt) {
+  if (usesImage(beat)) {
     const file = project.path('assets', 'images', `img_${assetId}.png`);
     if (!fs.existsSync(file))
       throw new Error(`Missing image for ${beat.id}: assets/images/img_${assetId}.png`);

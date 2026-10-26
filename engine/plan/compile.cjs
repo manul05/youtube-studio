@@ -185,6 +185,16 @@ function planIssues(plan, research) {
         `${beat.id}: ${beat.type} lasts only ${seconds.toFixed(1)} s (min ${spec.minSec} s).`,
       );
     }
+    if (beat.type === 'art-focus' || beat.type === 'art-tour') {
+      const { imagePrompt, photoQuery } = beat.fields;
+      if (!imagePrompt && !photoQuery) {
+        issues.push(
+          `${beat.id}: ${beat.type} needs "imagePrompt" (AI image) or "photoQuery" (stock photo).`,
+        );
+      } else if (imagePrompt && photoQuery) {
+        issues.push(`${beat.id}: ${beat.type} has imagePrompt and photoQuery — use one, not both.`);
+      }
+    }
     if (
       beat.type === 'art-tour' &&
       !(Array.isArray(beat.fields.crops) && beat.fields.crops.length >= 2)

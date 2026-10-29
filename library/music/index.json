@@ -1,1 +1,108 @@
-[]
+[
+  {
+    "file": "Awaiting Return - Atlantean Twilight - Kevin MacLeod.mp3",
+    "moods": ["documentary", "calm", "mystery"],
+    "licence": "YouTube Audio Library (Creative Commons Attribution 4.0)",
+    "attributionRequired": true,
+    "attributionText": "\"Awaiting Return\" by Kevin MacLeod (incompetech.com), licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "Clean and Dance - An Jone.mp3",
+    "moods": ["energetic", "upbeat"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Contact - The Tower of Light.mp3",
+    "moods": ["documentary", "tense", "neutral"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Cylinder Five - Chris Zabriskie.mp3",
+    "moods": ["documentary", "calm", "neutral"],
+    "licence": "YouTube Audio Library (Creative Commons Attribution 4.0)",
+    "attributionRequired": true,
+    "attributionText": "\"Cylinder Five\" by Chris Zabriskie, licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "Dark Alley Deals - Aaron Kenny.mp3",
+    "moods": ["tense", "dark", "mystery"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Dreamland - Aakash Gandhi.mp3",
+    "moods": ["calm", "hopeful"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Echoes of Time v2 - Kevin MacLeod.mp3",
+    "moods": ["documentary", "epic", "serious"],
+    "licence": "YouTube Audio Library (Creative Commons Attribution 4.0)",
+    "attributionRequired": true,
+    "attributionText": "\"Echoes of Time v2\" by Kevin MacLeod (incompetech.com), licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "Fast Lane - Gunnar Olsen.mp3",
+    "moods": ["energetic", "upbeat"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Heart of Nowhere - Kevin MacLeod.mp3",
+    "moods": ["serious", "dark", "epic"],
+    "licence": "YouTube Audio Library (Creative Commons Attribution 4.0)",
+    "attributionRequired": true,
+    "attributionText": "\"Heart of Nowhere\" by Kevin MacLeod (incompetech.com), licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/"
+  },
+  {
+    "file": "Resolution - Wayne Jones.mp3",
+    "moods": ["hopeful", "epic"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Spirit of the Dead - Aakash Gandhi.mp3",
+    "moods": ["dark", "mystery", "tense"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Spooked - Mini Vandals.mp3",
+    "moods": ["mystery", "tense"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Sunny Days - Anno Domini Beats.mp3",
+    "moods": ["upbeat", "hopeful"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Touching Moment - Wayne Jones.mp3",
+    "moods": ["hopeful", "calm", "serious"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Twinkle - The Grey Room _ Density & Time.mp3",
+    "moods": ["calm", "neutral", "hopeful"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Under the Wire - The Mini Vandals.mp3",
+    "moods": ["tense", "energetic"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  },
+  {
+    "file": "Underworld - Myuu.mp3",
+    "moods": ["dark", "mystery"],
+    "licence": "YouTube Audio Library",
+    "attributionRequired": false
+  }
+]

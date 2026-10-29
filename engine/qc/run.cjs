@@ -53,6 +53,15 @@ function loudnessIssues(audioFile, limits, category = 'E') {
       message: `True peak ${truePeak} dBTP is above ${limits.truePeakMax}.`,
     });
   }
+  for (const track of audio.music || []) {
+    if (!track.licence) {
+      out.push({
+        category,
+        hard: true,
+        message: `Music "${track.file}" has no licence in library/music/index.json.`,
+      });
+    }
+  }
   if (audio.voiceToMusicDb < limits.voiceToMusicMinDb) {
     out.push({
       category,
@@ -199,4 +208,4 @@ async function runQc(project) {
   return report;
 }
 
-module.exports = { runQc, quietWindows };
+module.exports = { runQc, quietWindows, loudnessIssues };

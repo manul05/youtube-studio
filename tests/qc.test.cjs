@@ -165,3 +165,23 @@ test(
     assert.equal(silenceIssues(file, { exempt: [[5.0, 6.0]] }).length, 1);
   },
 );
+
+test('music without a recorded licence is a hard failure', () => {
+  const { loudnessIssues } = require('../engine/qc/run.cjs');
+  const { qc } = require('../engine/config.cjs');
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'studio-music-qc-')), 'audio.json');
+  const audio = (music) => ({
+    final: { lufs: -14, truePeak: -1.5 },
+    voiceToMusicDb: 20,
+    music,
+  });
+  fs.writeFileSync(
+    file,
+    JSON.stringify(audio([{ chapter: 1, file: 'calm.mp3', licence: 'YouTube Audio Library' }])),
+  );
+  assert.deepEqual(loudnessIssues(file, qc()), []);
+  fs.writeFileSync(file, JSON.stringify(audio([{ chapter: 2, file: 'mystery.mp3' }])));
+  const [issue] = loudnessIssues(file, qc());
+  assert.equal(issue.hard, true);
+  assert.match(issue.message, /mystery\.mp3.*no licence/);
+});

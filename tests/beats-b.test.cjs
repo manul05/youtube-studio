@@ -150,3 +150,19 @@ test('simplify keeps the shape of a closed ring', () => {
   ];
   assert.equal(simplify(square, 0.01).length, 5);
 });
+
+test('the map check renders India in every main style for the owner to compare', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { loadImage } = require('@napi-rs/canvas');
+  const { renderMapCheck } = require('../tools/map-check.cjs');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'studio-mapcheck-'));
+  const files = renderMapCheck(dir);
+  assert.ok(files.length >= 1);
+  for (const file of files) {
+    const image = await loadImage(fs.readFileSync(file));
+    assert.equal(image.width, 1920);
+    assert.equal(image.height, 1080);
+  }
+});

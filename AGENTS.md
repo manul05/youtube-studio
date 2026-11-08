@@ -9,6 +9,7 @@ You are producing a YouTube video with this studio. The studio's commands do the
 3. If the command lists issues, fix exactly those and run it again. Never move on while it fails.
 4. At a review stop (`gate:…`), tell the owner: "Stop N is ready: `npm run review -- <project>`" and wait. Only the owner approves.
 5. A command that exits with code **75** hit the Gemini free-tier limit. Stop and tell the owner to run the same command again later; it resumes where it stopped.
+6. A command that **crashes** (a stack trace, not a list of issues) is a studio bug: follow `docs/MAINTAINING.md` (failing test first, never weaken a check), then re-run the step.
 
 Start a new video with `prompts/DAILY.txt` (the owner fills it in) and `npm run new -- <slug> --channel=<channel-id>`.
 
@@ -34,7 +35,8 @@ Start a new video with `prompts/DAILY.txt` (the owner fills it in) and `npm run 
 
 ## Where things are
 
-- `START_HERE.md` — the owner's guide. `docs/DESIGN.md` — why the studio works this way.
+- `START_HERE.md` — the owner's guide; `docs/OWNER_TODO.md` — what the owner still has to do. `docs/DESIGN.md` — why the studio works this way. `docs/MAINTAINING.md` — changing or fixing the studio itself.
+- `prompts/` — `DAILY.txt` (a video), `SETUP_CHANNEL.txt` (a channel), `NEW_STYLE.txt` (a style), `FIX_PROBLEM.txt` (a crash).
 - `docs/steps/01-idea.md` … `14-release.md` — one playbook per step.
 - `docs/QUALITY_RUBRIC.md` — how the 95+ score is judged. `docs/STYLE_PACK_GUIDE.md` — adding a style.
 - `projects/<date>-<slug>/` — one folder per video. `styles/` — style packs (`npm run styles` builds the gallery).

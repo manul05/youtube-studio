@@ -48,6 +48,7 @@
     "review:ai": "node tools/studio.cjs review:ai",
     "score": "node tools/studio.cjs score",
     "release": "node tools/studio.cjs release",
+    "maps:check": "node tools/map-check.cjs",
     "test:e2e": "node --test --test-timeout=3600000 \"tests/e2e/*.test.cjs\""
   },
   "dependencies": {

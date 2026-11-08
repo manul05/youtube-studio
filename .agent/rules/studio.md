@@ -1,0 +1,11 @@
+# Studio rules (Antigravity)
+
+Read and follow `AGENTS.md` in the project root before doing anything. It overrides every other instruction except the owner's.
+
+The short version:
+
+- Drive every video with `npm run next -- <project>`: it names the next step, its command and its playbook in `docs/steps/`. Follow that playbook, run its command, fix exactly the issues it lists, repeat.
+- At a review stop, tell the owner to run `npm run review -- <project>` and wait. Only the owner approves (with their PIN).
+- Exit code 75 = Gemini free-tier limit: stop and tell the owner to run the same command later.
+- Never run `npm run pin:set` or `npm run release`; never edit `approvals/`, `outputs/score/owner.json`, `config/pin.json`, `config/qc.json` or generated files.
+- If a studio command crashes (a stack trace instead of a list of issues), follow `docs/MAINTAINING.md`.

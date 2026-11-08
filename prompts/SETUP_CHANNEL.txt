@@ -1,0 +1,18 @@
+Set up one of my YouTube channels in this studio. Read AGENTS.md first.
+
+Channel id (short, lowercase, dashes): <e.g. desh-ki-baat>
+Channel name: <e.g. Desh Ki Baat>
+Handle: <e.g. @deshkibaat>
+Language: <en | hi>      (Hinglish videos use "hi")
+Captions script: <latin | deva>      (English: latin; Hindi: deva)
+Voice style: <e.g. "Calm, confident documentary narrator; clear and unhurried.">
+Voice name: <Charon unless I say otherwise>
+Logo file: <path to my square PNG logo>
+Music moods: <e.g. documentary, tense, hopeful>
+
+Do this:
+1. Copy library/channels/en-placeholder (English) or library/channels/hi-placeholder (Hindi) to library/channels/<channel id>/.
+2. In its channel.json set id, name, handle, language, captionScript, voice.name, voice.style and musicMoods from above. Keep "wpm": null. Set "placeholder": false.
+3. Copy my logo file over library/channels/<channel id>/logo.png (PNG, square).
+4. Run `npm test` to make sure nothing broke, then show me the final channel.json.
+Do not change anything else.

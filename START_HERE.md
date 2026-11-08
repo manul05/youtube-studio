@@ -2,6 +2,8 @@
 
 This folder is a video studio. You give Antigravity, Codex or Claude Code a topic; the studio's commands make, check and score the video; you approve it at five review stops. Nothing is released unless it scores 95+ and you type your PIN.
 
+**What is still left for you:** see `docs/OWNER_TODO.md`. Works the same with Codex (reads `AGENTS.md`), Antigravity (`GEMINI.md`, `.agent/rules/`), Cursor (`.cursor/rules/`) and Claude Code (`CLAUDE.md`).
+
 ## One-time setup (about 30 minutes)
 
 1. **Tools** — Node 22+ and FFmpeg must be installed (they are on this PC). In this folder run:
@@ -19,8 +21,8 @@ This folder is a video studio. You give Antigravity, Codex or Claude Code a topi
 3. **Check everything** — `npm run doctor`. Every line should say OK. It also picks the free Gemini model used for the independent review.
 4. **Your PIN** — `npm run pin:set` (6+ digits). Agents cannot approve review stops or release without it. Keep it to yourself.
 5. **Music** — download 20–30 tracks from the YouTube Audio Library into `library/music/` and list them in `library/music/index.json` (see `library/music/README.md`). Sound effects are optional (`library/sfx/README.md`).
-6. **Your channels** — one folder per channel in `library/channels/`, e.g. copy `en-placeholder` to `library/channels/my-english-channel/`, edit `channel.json` (name, handle, language, voice, `"placeholder": false`) and replace `logo.png`. Do the same for your Hindi channel.
-7. **Maps of India** — before your first video with a map, open `library/maps/SOURCES.md`, compare a rendered map with the official Survey of India map, and write your name and date on the "Owner confirmation" line. Each time you release a video with a map, the release command also asks you to confirm it (type YES).
+6. **Your channels** — fill in `prompts/SETUP_CHANNEL.txt` and paste it into your agent, once per channel. (By hand: copy `library/channels/en-placeholder` to `library/channels/my-english-channel/`, edit `channel.json` — name, handle, language, voice, `"placeholder": false` — and replace `logo.png`.)
+7. **Maps of India** — before your first video with a map, run `npm run maps:check`, compare `library/maps/india_check_*.png` with the official Survey of India map, open `library/maps/SOURCES.md` and write your name and date on the "Owner confirmation" line. Each time you release a video with a map, the release command also asks you to confirm it (type YES).
 8. **Styles** — `npm run styles` builds `styles/gallery.html`; open it to see every style.
 
 ## Every day (about 45–60 minutes of your time)
@@ -40,6 +42,7 @@ This folder is a video studio. You give Antigravity, Codex or Claude Code a topi
 
 - **"Gemini free-tier limit reached"** (exit code 75): wait, then ask the agent to run the same command again. Finished work is kept.
 - **A check fails**: the message names the exact problem; the agent fixes it and re-runs. You never need to edit code.
+- **A command crashes** (a long error with file names and line numbers): fill in `prompts/FIX_PROBLEM.txt` and paste it into your agent. It fixes the studio with a test first and never lowers the quality bar.
 - **Not sure what is next**: `npm run next -- <project>`.
 
 ## Where things are

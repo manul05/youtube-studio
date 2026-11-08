@@ -1,0 +1,12 @@
+A studio command crashed or behaves wrongly. Read AGENTS.md and docs/MAINTAINING.md first and follow them exactly.
+
+Project: <project folder name, e.g. 2026-11-09-cjp>
+Command I ran: <e.g. npm run align -- 2026-11-09-cjp>
+What happened: <paste the error message or describe what looks wrong>
+
+First tell me in plain words what is wrong and what you plan to change. Then:
+1. Write a test in tests/ that fails because of this problem, and run it to show it fails.
+2. Fix the code so the test passes. Never weaken a check, lower a threshold or delete a test to make it pass.
+3. Run `npm test` and `npm run lint` (both must pass), then `npm run test:e2e` if you changed anything under engine/.
+4. Add one line to docs/BUILD_DECISIONS.md if you made a decision I should know about.
+5. Commit with a clear message, then tell me to re-run the command that failed.

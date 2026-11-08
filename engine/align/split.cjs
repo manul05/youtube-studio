@@ -8,6 +8,8 @@ const { spokenText } = require('../words/text.cjs');
 const { chapterId, assertParagraphId } = require('../voice/synthesize.cjs');
 const { matchWords, mapSubstitutions } = require('./match.cjs');
 const { runWhisper, asrLanguage } = require('./whisper.cjs');
+const { presenterMode } = require('../steps.cjs');
+const { editChapter } = require('../presenter/takes.cjs');
 
 const round = (x) => Math.round(x * 1000) / 1000;
 
@@ -50,15 +52,27 @@ async function splitChapter(project, chapterNumber, { asr = defaultAsr(project) 
   if (!chapter) throw new Error(`No chapter ${chapterNumber} in script.json.`);
   const cid = chapterId(chapter);
   chapter.paragraphs.forEach((p) => assertParagraphId(p.id));
-  const source = project.path('work', 'voice', 'chapters', `${cid}.wav`);
-  if (!fs.existsSync(source)) return { issues: [`${cid}: no recording yet (run npm run voice).`] };
+  const raw = project.path('work', 'voice', 'chapters', `${cid}.wav`);
+  const recorded = presenterMode(project) !== 'ai';
+  if (!fs.existsSync(raw)) {
+    const command = recorded ? 'recording:import' : 'voice';
+    return { issues: [`${cid}: no recording yet (run npm run ${command}).`] };
+  }
 
-  const pron = pronunciations(project);
+  // A person says names as written; pronunciation hints are only for the AI voice.
+  const pron = recorded ? {} : pronunciations(project);
   const maxRatio = qc().alignMaxInterpolated;
   const issues = [];
 
-  // Time every paragraph inside the chapter recording.
-  const asrWords = await asr(source);
+  // Time every paragraph inside the chapter recording. The owner's own recordings are edited
+  // first: last take of each sentence, no restarts, no long pauses (engine/presenter/takes.cjs).
+  let asrWords = await asr(raw);
+  let source = raw;
+  if (recorded) {
+    const edit = editChapter(project, chapter, cid, raw, asrWords);
+    source = edit.file;
+    asrWords = edit.words;
+  }
   const paragraphs = chapter.paragraphs;
   const tokenCounts = paragraphs.map(
     (p) => spokenText(p, pron).tts.split(/\s+/).filter(Boolean).length,

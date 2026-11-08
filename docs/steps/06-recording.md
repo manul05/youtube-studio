@@ -17,4 +17,6 @@ Used instead of `06-voice.md` when `brief.presenter.mode` is `voice` or `face`.
 ## Then
 
 - Run the command. It lists any chapter without a recording and any file it cannot read. Ask the owner for exactly those.
-- Unscripted passages (ad-libs) are found in the next step (`align`) and shown to the owner at stop 4 to keep or cut. A kept ad-lib that states a fact needs a claim in `research.json`, like every sentence.
+- The next step (`align`) edits each chapter: it keeps the **last** take of every sentence, cuts restarts and stumbles, and shortens pauses over 0.35 s. The edit is in `work/takes/<cid>.edl.json`.
+- Unscripted passages (4 words or more that are not in the script) are **cut** and listed in `work/takes/<cid>.adlibs.json`; stop 4 shows each one with a player. If the owner wants one kept, add it to `script.json` at its place, with a claim tag if it states a fact (add the claim to `research.json`). The script stop then needs the owner's approval again, and `align` keeps it on the next run.
+- A sentence the recogniser could not find is never cut: the stretch around it is kept, and `align` reports it if too many of its words are unmatched.

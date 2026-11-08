@@ -283,3 +283,181 @@ test('the recording:import command stamps the voice step only when every chapter
   assert.equal(await main(['recording:import', project.dir]), 0);
   assert.notEqual(stepState(project, 'voice'), 'todo');
 });
+
+/** Recogniser words for a phrase, starting at `start`, one word every `step` seconds. */
+function spoken(text, start, step = 0.4) {
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((t, i) => ({ text: t, start: start + i * step, end: start + i * step + step * 0.8 }));
+}
+
+const S1 = 'The court heard the case on a quiet Monday morning.';
+const S2 = 'Nobody expected the ruling that followed.';
+const sentencesOf = (...texts) => texts.map((t, i) => ({ id: `s${i + 1}`, tokens: t.split(' ') }));
+
+test('a sentence said twice keeps the second take', () => {
+  const { chooseTakes } = require('../engine/presenter/takes.cjs');
+  const asr = [...spoken(S1, 0), ...spoken(S1, 5), ...spoken(S2, 10)];
+  const { kept, retakes } = chooseTakes(sentencesOf(S1, S2), asr);
+  assert.ok(Math.abs(kept[0].start - 5) < 0.01, `kept S1 at ${kept[0].start}`);
+  assert.ok(Math.abs(kept[1].start - 10) < 0.01);
+  assert.equal(retakes.length, 1);
+  assert.ok(Math.abs(retakes[0].start - 0) < 0.01);
+});
+
+test('a restart inside a sentence is cut, and is not called an ad-lib', () => {
+  const { chooseTakes } = require('../engine/presenter/takes.cjs');
+  const asr = [...spoken('The court', 0), ...spoken(S1, 1.5), ...spoken(S2, 6.5)];
+  const { kept, adlibs } = chooseTakes(sentencesOf(S1, S2), asr);
+  assert.ok(Math.abs(kept[0].start - 1.5) < 0.01);
+  assert.deepEqual(adlibs, []);
+});
+
+test('unscripted words are listed as an ad-lib with their time, and cut', () => {
+  const { chooseTakes, editList } = require('../engine/presenter/takes.cjs');
+  const asr = [
+    ...spoken(S1, 0),
+    ...spoken('and honestly this was really wild', 5),
+    ...spoken(S2, 9),
+  ];
+  const { kept, adlibs } = chooseTakes(sentencesOf(S1, S2), asr);
+  assert.equal(adlibs.length, 1);
+  assert.equal(adlibs[0].text, 'and honestly this was really wild');
+  assert.ok(Math.abs(adlibs[0].start - 5) < 0.01);
+  const segments = editList(kept, 12);
+  assert.ok(
+    !segments.some(([a, b]) => a < adlibs[0].end && b > adlibs[0].start + 0.2),
+    'the ad-lib is not in the edit',
+  );
+});
+
+test('pauses longer than 0.35 s are shortened to 0.35 s; shorter ones are kept', () => {
+  const { editList } = require('../engine/presenter/takes.cjs');
+  const segments = editList(
+    [
+      { start: 0.5, end: 2.0 },
+      { start: 2.2, end: 3.0 },
+      { start: 5.0, end: 6.0 },
+    ],
+    7,
+  );
+  assert.equal(segments.length, 2, 'the 0.2 s pause is kept inside one segment');
+  assert.ok(segments[0][1] < segments[1][0], 'segments are in order and do not overlap');
+  // In the edited audio, the quiet between "3.0" (speech ends) and "5.0" (speech starts again).
+  const pauseOut = segments[0][1] - 3.0 + (5.0 - segments[1][0]);
+  assert.ok(Math.abs(pauseOut - 0.35) < 1e-9, `pause is ${pauseOut} s`);
+});
+
+test('the edited chapter is shorter than the raw one by exactly the cut time', () => {
+  const { applyEdit } = require('../engine/presenter/takes.cjs');
+  const { probe, run, ffmpegPath } = require('../engine/util/proc.cjs');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'studio-edit-'));
+  const raw = path.join(dir, 'raw.wav');
+  run(ffmpegPath(), [
+    '-v',
+    'error',
+    '-y',
+    '-f',
+    'lavfi',
+    '-i',
+    'sine=f=220:d=8',
+    '-ar',
+    '48000',
+    '-ac',
+    '2',
+    raw,
+  ]);
+  const segments = [
+    [0.2, 1.5],
+    [2.0, 4.25],
+    [6.0, 7.9],
+  ];
+  const out = path.join(dir, 'edited.wav');
+  applyEdit(raw, out, segments);
+  const expected = segments.reduce((n, [a, b]) => n + (b - a), 0);
+  const actual = Number(probe(out).format.duration);
+  assert.ok(Math.abs(actual - expected) < 0.02, `${actual} vs ${expected}`);
+});
+
+test('a Hindi sentence said twice keeps the second take (real recogniser spelling)', () => {
+  const { chooseTakes } = require('../engine/presenter/takes.cjs');
+  const samples = require('./fixtures/audio/asr-samples.json');
+  const once = samples.hi.asr;
+  const length = once[once.length - 1].end + 1;
+  const twice = [
+    ...once,
+    ...once.map((w) => ({ ...w, start: w.start + length, end: w.end + length })),
+  ];
+  const tokens = samples.hi.text.split(/\s+/).filter(Boolean);
+  const { kept, retakes } = chooseTakes([{ id: 's1', tokens }], twice);
+  assert.ok(kept[0].start >= length - 0.01, `kept at ${kept[0].start}, second take at ${length}`);
+  assert.equal(retakes.length, 1);
+});
+
+test('voice-mode alignment cuts the repeat and aligns paragraphs to the edited audio', async () => {
+  const { splitChapter } = require('../engine/align/split.cjs');
+  const { probe, run, ffmpegPath } = require('../engine/util/proc.cjs');
+  const project = tempProject();
+  writeScript(project, [
+    {
+      id: 1,
+      title: 'One',
+      paragraphs: [
+        { id: 'c01p01', text: `${S1} [[analysis]]` },
+        { id: 'c01p02', text: `${S2} [[analysis]]` },
+      ],
+    },
+  ]);
+  const raw = project.path('work', 'voice', 'chapters', 'c01.wav');
+  fs.mkdirSync(path.dirname(raw), { recursive: true });
+  run(ffmpegPath(), [
+    '-v',
+    'error',
+    '-y',
+    '-f',
+    'lavfi',
+    '-i',
+    'sine=f=200:d=14',
+    '-ar',
+    '48000',
+    '-ac',
+    '2',
+    raw,
+  ]);
+  const asr = [...spoken(S1, 0.3), ...spoken(S1, 5), ...spoken(S2, 10)];
+  const result = await splitChapter(project, 1, { asr: async () => asr });
+  assert.deepEqual(result.issues, []);
+  const edl = JSON.parse(fs.readFileSync(project.path('work', 'takes', 'c01.edl.json'), 'utf8'));
+  assert.ok(edl.segments[0][0] >= 4.5, 'the first take is cut');
+  const edited = Number(probe(project.path('work', 'takes', 'c01.wav')).format.duration);
+  assert.ok(edited < 10, `edited chapter is ${edited} s`);
+  const p1 = JSON.parse(fs.readFileSync(project.path('work', 'align', 'c01p01.json'), 'utf8'));
+  assert.equal(p1.words.length, S1.split(' ').length);
+  assert.ok(p1.words[0].start < 0.5, 'paragraph 1 starts at the kept take');
+});
+
+test('stop 4 lists each unscripted passage with a player at its place in the raw recording', () => {
+  require('../engine/review/register-pages.cjs');
+  const { pageData } = require('../engine/review/pages.cjs');
+  const project = tempProject();
+  const dir = project.path('work', 'takes');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, 'c01.adlibs.json'),
+    JSON.stringify({
+      chapter: 'c01',
+      adlibs: [{ text: 'and honestly this was really wild', start: 5, end: 7.3 }],
+    }),
+  );
+  const page = pageData(project, 'gate:storyboard');
+  const section = page.sections.find((s) => /Unscripted/.test(s.heading || ''));
+  assert.ok(section, 'an unscripted-passages section');
+  assert.equal(section.kind, 'audio');
+  assert.deepEqual(section.items[0], {
+    path: 'work/voice/chapters/c01.wav',
+    label: 'c01 at 00:05: "and honestly this was really wild" — cut',
+    start: 5,
+    end: 7.3,
+  });
+});

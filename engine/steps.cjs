@@ -95,6 +95,7 @@ const STEPS = [
     '07-align',
     ['work/voice/chapters/*', 'work/voice/overrides/*'],
     ['work/voice/paragraphs/*', 'work/align/*'],
+    { outputs: ['work/voice/paragraphs/*', 'work/align/*', 'work/takes/*'] },
   ),
   step('plan', 'plan', '08-plan', ['script.json', 'brief.json', 'work/align/*'], ['beats.json']),
   step(

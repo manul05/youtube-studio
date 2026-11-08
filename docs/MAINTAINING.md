@@ -43,6 +43,10 @@ Only when a studio command **crashes** (a stack trace instead of a list of issue
 - `npm run test:live` — real Gemini TTS and real faster-whisper; needs `GEMINI_API_KEY`, uses free-tier quota.
 - `npm run doctor` — checks tools, fonts and keys.
 
+## Planned work
+
+- `docs/FACE_VIDEO_PLAN.md` — presenter mode: the owner's own voice (Phase A) and face on camera (Phase B). Build it task by task in that order, only when the owner asks.
+
 ## Known open items
 
 See `docs/BUILD_DECISIONS.md` → "Deferred minor issues". Fix them only when the owner asks.

@@ -1,0 +1,13 @@
+Build the presenter mode for this studio. Read AGENTS.md, docs/MAINTAINING.md and docs/FACE_VIDEO_PLAN.md first and follow them exactly.
+
+My answers to the plan's five questions:
+1. Phases: <A only | A then B>
+2. Recording kit: <e.g. phone, 4K 30 fps, lavalier mic>
+3. Recording unit: <one file per chapter | one file for the whole video>
+4. Ad-libs: <allowed, listed at stop 3 | not allowed>
+5. Thumbnail face: <I supply a cut-out PNG | remove the background with rembg>
+
+Write my answers into docs/BUILD_DECISIONS.md first.
+Then build the tasks in order (A1, A2, …). For each task: write its tests first and show they fail, make them pass, run `npm test` and `npm run lint`, and commit. Run `npm run test:e2e` after every task that changes engine/ — today's AI-voice videos must keep passing.
+After each task, tell me in two lines what now works. Stop and ask me if a task needs a decision the plan does not answer.
+Never weaken a check, lower a threshold or change the release bar.

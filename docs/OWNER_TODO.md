@@ -28,6 +28,7 @@ What is left for you (the owner). Tick items off as you go; any agent can help w
 
 ## Optional improvements (ask an agent, pointing it to `docs/MAINTAINING.md`)
 
+- **Face videos (Dhruv Rathee style)** or **your own voice**: the build plan is `docs/FACE_VIDEO_PLAN.md`. Answer its five questions, then paste `prompts/BUILD_FACE_MODE.txt` into your agent.
 - Music variety: rotate through every matching track instead of alternating the top two.
 - A "chat handoff" so a chat model (e.g. Argon 4 in Gemini) can write research and script.
 - The deferred minor issues listed in `docs/BUILD_DECISIONS.md`.

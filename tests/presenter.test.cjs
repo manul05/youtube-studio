@@ -197,3 +197,89 @@ test('the recording:check command stamps the voice-sample step only when it pass
   assert.equal(await main(['recording:check', project.dir]), 0);
   assert.notEqual(stepState(project, 'voice-sample'), 'todo');
 });
+
+const TWO_CHAPTERS = [
+  { id: 1, title: 'One', paragraphs: [{ id: 'c01p01', text: 'First chapter. [[analysis]]' }] },
+  { id: 2, title: 'Two', paragraphs: [{ id: 'c02p01', text: 'Second chapter. [[analysis]]' }] },
+];
+
+test('import writes a cleaned 48 kHz stereo chapter file for each recording', () => {
+  const { importRecordings } = require('../engine/presenter/import.cjs');
+  const { probe } = require('../engine/util/proc.cjs');
+  const project = tempProject();
+  writeScript(project, TWO_CHAPTERS);
+  recording(project.path('recordings', 'c01.wav'), { seconds: 6 });
+  recording(project.path('recordings', 'c02.mp3'), { seconds: 5 });
+  const result = importRecordings(project);
+  assert.deepEqual(result.issues, []);
+  assert.deepEqual(result.imported, ['c01', 'c02']);
+  for (const cid of ['c01', 'c02']) {
+    const a = probe(project.path('work', 'voice', 'chapters', `${cid}.wav`)).streams[0];
+    assert.equal(Number(a.sample_rate), 48000);
+    assert.equal(a.channels, 2);
+  }
+});
+
+test('a missing chapter recording is reported by chapter id', () => {
+  const { importRecordings } = require('../engine/presenter/import.cjs');
+  const project = tempProject();
+  writeScript(project, TWO_CHAPTERS);
+  recording(project.path('recordings', 'c01.wav'), { seconds: 4 });
+  const { issues } = importRecordings(project);
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /^c02: no recording .*recordings\/c02\./);
+});
+
+test('re-importing an unchanged recording is skipped; a changed one is redone', () => {
+  const { importRecordings } = require('../engine/presenter/import.cjs');
+  const project = tempProject();
+  writeScript(project, [TWO_CHAPTERS[0]]);
+  recording(project.path('recordings', 'c01.wav'), { seconds: 4 });
+  importRecordings(project);
+  const out = project.path('work', 'voice', 'chapters', 'c01.wav');
+  const before = fs.statSync(out).mtimeMs;
+  const again = importRecordings(project);
+  assert.deepEqual(again.skipped, ['c01']);
+  assert.equal(fs.statSync(out).mtimeMs, before);
+  recording(project.path('recordings', 'c01.wav'), { seconds: 5 });
+  assert.deepEqual(importRecordings(project).imported, ['c01']);
+});
+
+test('a clipped chapter recording is reported so it can be recorded again', () => {
+  const { importRecordings } = require('../engine/presenter/import.cjs');
+  const project = tempProject();
+  writeScript(project, [TWO_CHAPTERS[0]]);
+  recording(project.path('recordings', 'c01.wav'), { seconds: 4, gain: 40 });
+  assert.match(importRecordings(project).issues.join('\n'), /c01: the recording clips \d+ time/);
+});
+
+test('face mode also keeps a 30 fps video copy without sound', () => {
+  const { importRecordings } = require('../engine/presenter/import.cjs');
+  const { probe } = require('../engine/util/proc.cjs');
+  const project = tempProject({ mode: 'face' });
+  writeScript(project, [TWO_CHAPTERS[0]]);
+  recording(project.path('recordings', 'c01.mp4'), {
+    seconds: 3,
+    video: { size: '1920x1080', fps: 60 },
+  });
+  assert.deepEqual(importRecordings(project).issues, []);
+  const streams = probe(project.path('work', 'presenter', 'c01.mp4')).streams;
+  assert.deepEqual(
+    streams.map((s) => s.codec_type),
+    ['video'],
+  );
+  assert.equal(streams[0].avg_frame_rate, '30/1');
+  assert.equal(streams[0].width, 1920);
+});
+
+test('the recording:import command stamps the voice step only when every chapter is in', async () => {
+  const { main } = require('../tools/studio.cjs');
+  const { stepState } = require('../engine/next.cjs');
+  const project = tempProject();
+  writeScript(project, TWO_CHAPTERS);
+  recording(project.path('recordings', 'c01.wav'), { seconds: 4 });
+  assert.equal(await main(['recording:import', project.dir]), 1);
+  recording(project.path('recordings', 'c02.wav'), { seconds: 4 });
+  assert.equal(await main(['recording:import', project.dir]), 0);
+  assert.notEqual(stepState(project, 'voice'), 'todo');
+});

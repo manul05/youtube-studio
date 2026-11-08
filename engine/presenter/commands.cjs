@@ -3,6 +3,7 @@
 const { openProject } = require('../project.cjs');
 const { writeStamp } = require('../next.cjs');
 const { checkRecording } = require('./recording-check.cjs');
+const { importRecordings } = require('./import.cjs');
 
 function projectFrom(positional, example) {
   if (!positional[0])
@@ -34,6 +35,24 @@ const COMMANDS = {
       );
       return 0;
     },
+  },
+};
+
+COMMANDS['recording:import'] = {
+  summary: "Import and clean the owner's chapter recordings (recordings/c01.*, c02.*, …).",
+  run: ({ positional }) => {
+    const project = projectFrom(positional, 'recording:import');
+    const { imported, skipped, issues } = importRecordings(project);
+    if (imported.length) console.log(`Imported: ${imported.join(', ')}`);
+    if (skipped.length) console.log(`Unchanged: ${skipped.join(', ')}`);
+    if (issues.length) {
+      console.log(`recordings: ${issues.length} issue(s):`);
+      for (const issue of issues) console.log(`  - ${issue}`);
+      return 1;
+    }
+    writeStamp(project, 'voice');
+    console.log(`All chapters imported. Next: npm run next -- ${project.name}`);
+    return 0;
   },
 };
 

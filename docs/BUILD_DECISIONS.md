@@ -140,3 +140,4 @@ Every decision the builder made on the owner's behalf while building Phase 1, in
 5. Thumbnail face: the owner supplies a cut-out PNG with a transparent background (no background-removal tool).
 - Ruling (A1): ad-libs are shown at stop 4 (storyboard), not stop 3 — stop 3 comes before the chapters are recorded, so no ad-libs exist yet — cost if wrong: none.
 - Ruling: `npm test` runs one test file at a time (`--test-concurrency=1`, about 2 minutes) — with several heavy image and video test files in parallel, a PC with ~3 GB free memory crashed render children; the checks themselves are unchanged — cost if wrong: a slower test run.
+- Ruling (A2): the teleprompter shows the script's real spelling (claim tags removed), not the pronunciation hints written for the AI voice — the owner reads names naturally — cost if wrong: none.

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teleprompter</title>
+    <style>
+      :root {
+        --bg: #0c0d0d;
+        --ink: #f2f1ec;
+        --muted: #8d948f;
+        --accent: #e0775f;
+        --line: #2b2f2d;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body.deva {
+        font-family: 'Nirmala UI', 'Segoe UI', system-ui, sans-serif;
+      }
+      .bar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 16px;
+        background: #151716;
+        border-bottom: 1px solid var(--line);
+        font-size: 15px;
+      }
+      .bar label {
+        color: var(--muted);
+      }
+      .bar button,
+      .bar select {
+        font: inherit;
+        color: var(--ink);
+        background: #222624;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 12px;
+      }
+      .bar .play {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #1a0d09;
+        font-weight: 600;
+      }
+      .hint {
+        color: var(--muted);
+        margin-left: auto;
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40vh 24px 70vh;
+        line-height: 1.5;
+      }
+      main.mirror {
+        transform: scaleX(-1);
+      }
+      .file {
+        color: var(--accent);
+        font-size: 0.45em;
+        margin: 0 0 0.6em;
+      }
+      h1 {
+        font-size: 0.7em;
+        color: var(--muted);
+        margin: 0 0 0.8em;
+      }
+      p {
+        margin: 0 0 1.1em;
+      }
+      .guide {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 38vh;
+        height: 0;
+        border-top: 2px dashed rgba(224, 119, 95, 0.5);
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <label for="chapter">Chapter</label>
+      <select id="chapter"></select>
+      <button id="smaller" type="button" title="Smaller text">A−</button>
+      <button id="bigger" type="button" title="Bigger text">A+</button>
+      <label for="speed">Speed</label>
+      <input id="speed" type="range" min="10" max="160" value="45" />
+      <button id="mirror" type="button" title="Mirror for teleprompter glass">Mirror</button>
+      <button id="play" class="play" type="button">Start</button>
+      <span class="hint"
+        >Space = start/pause · ↑↓ = speed · stumbled? pause, repeat the sentence</span
+      >
+    </div>
+    <div class="guide"></div>
+    <main id="text"></main>
+    <script>
+      const DATA = /*TELEPROMPTER_DATA*/ null;
+      const main = document.getElementById('text');
+      const select = document.getElementById('chapter');
+      const speed = document.getElementById('speed');
+      const play = document.getElementById('play');
+      let size = 44;
+      let running = false;
+      let last = 0;
+      let carry = 0;
+
+      if (DATA.script === 'deva') document.body.classList.add('deva');
+
+      (DATA.chapters || []).forEach((chapter, i) => {
+        const option = document.createElement('option');
+        option.value = String(i);
+        option.textContent = `${i + 1}. ${chapter.title}`;
+        select.appendChild(option);
+      });
+
+      function show(index) {
+        const chapter = DATA.chapters[index];
+        main.textContent = '';
+        if (!chapter) return;
+        const file = document.createElement('div');
+        file.className = 'file';
+        file.textContent = `Save this chapter as ${chapter.file}`;
+        const title = document.createElement('h1');
+        title.textContent = chapter.title;
+        main.append(file, title);
+        for (const text of chapter.paragraphs) {
+          const p = document.createElement('p');
+          p.textContent = text;
+          main.appendChild(p);
+        }
+        window.scrollTo(0, 0);
+      }
+
+      function setSize(next) {
+        size = Math.max(24, Math.min(96, next));
+        main.style.fontSize = `${size}px`;
+      }
+
+      function toggle() {
+        running = !running;
+        play.textContent = running ? 'Pause' : 'Start';
+        last = 0;
+        if (running) requestAnimationFrame(step);
+      }
+
+      function step(now) {
+        if (!running) return;
+        if (last) {
+          carry += ((now - last) / 1000) * Number(speed.value);
+          const whole = Math.floor(carry);
+          if (whole) {
+            window.scrollBy(0, whole);
+            carry -= whole;
+          }
+        }
+        last = now;
+        requestAnimationFrame(step);
+      }
+
+      select.addEventListener('change', () => show(Number(select.value)));
+      document.getElementById('smaller').addEventListener('click', () => setSize(size - 4));
+      document.getElementById('bigger').addEventListener('click', () => setSize(size + 4));
+      document
+        .getElementById('mirror')
+        .addEventListener('click', () => main.classList.toggle('mirror'));
+      play.addEventListener('click', toggle);
+      document.addEventListener('keydown', (e) => {
+        if (e.target === select) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          toggle();
+        } else if (e.code === 'ArrowUp') {
+          e.preventDefault();
+          speed.value = String(Number(speed.value) + 5);
+        } else if (e.code === 'ArrowDown') {
+          e.preventDefault();
+          speed.value = String(Number(speed.value) - 5);
+        }
+      });
+
+      setSize(size);
+      show(0);
+    </script>
+  </body>
+</html>

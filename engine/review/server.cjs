@@ -10,6 +10,7 @@ const { writeApproval, signOwnerRatings, ownerRatingsIssue } = require('./approv
 const { pageData } = require('./pages.cjs');
 const { readJson, writeJson } = require('../util/files.cjs');
 const { aggregate } = require('../score/aggregate.cjs');
+const { teleprompterData } = require('../presenter/teleprompter.cjs');
 
 const PAGES_DIR = path.join(__dirname, 'pages');
 const MAX_BODY = 1024 * 1024;
@@ -121,7 +122,15 @@ function indexPage(project) {
   return `<!doctype html><html><head><meta charset="utf-8"><title>Review — ${project.name}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="font-family:system-ui;max-width:760px;margin:40px auto;padding:0 16px">
-<h1>Review stops for ${project.name}</h1><ul>${rows}</ul></body></html>`;
+<h1>Review stops for ${project.name}</h1><ul>${rows}</ul>
+<p><a href="/teleprompter">Teleprompter</a> — read the script aloud when you record your own voice.</p>
+</body></html>`;
+}
+
+/** The owner's teleprompter for recording the narration (presenter modes "voice" and "face"). */
+function teleprompterPage(project) {
+  const html = fs.readFileSync(path.join(PAGES_DIR, 'teleprompter.html'), 'utf8');
+  return html.replace(/\/\*TELEPROMPTER_DATA\*\/\s*null/, () => embed(teleprompterData(project)));
 }
 
 function gatePage(project, gateId) {
@@ -236,6 +245,9 @@ function startServer(project, { port = 8770, pinFile } = {}) {
       const url = new URL(req.url, `http://${req.headers.host}`);
       if (req.method === 'GET' && url.pathname === '/') {
         return send(res, 200, indexPage(project), TYPES['.html']);
+      }
+      if (req.method === 'GET' && url.pathname === '/teleprompter') {
+        return send(res, 200, teleprompterPage(project), TYPES['.html']);
       }
       if (req.method === 'GET' && url.pathname === '/gate.js') {
         return send(res, 200, fs.readFileSync(path.join(PAGES_DIR, 'gate.js')), TYPES['.js']);

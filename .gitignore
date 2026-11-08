@@ -21,3 +21,6 @@ library/music/*.ogg
 library/music/*.flac
 library/sfx/*.mp3
 library/sfx/*.wav
+
+# Owner recordings (large media; keep a backup outside git)
+projects/*/recordings/

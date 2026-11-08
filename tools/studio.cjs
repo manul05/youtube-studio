@@ -138,6 +138,7 @@ function requireProject(positional) {
 
 Object.assign(COMMANDS, require('../engine/words/commands.cjs').COMMANDS);
 Object.assign(COMMANDS, require('../engine/voice/commands.cjs').COMMANDS);
+Object.assign(COMMANDS, require('../engine/presenter/commands.cjs').COMMANDS);
 Object.assign(COMMANDS, require('../engine/align/commands.cjs').COMMANDS);
 Object.assign(COMMANDS, require('../engine/plan/commands.cjs').COMMANDS);
 Object.assign(COMMANDS, require('../engine/styles/commands.cjs').COMMANDS);

@@ -4,6 +4,40 @@ const fs = require('node:fs');
 const { readJson } = require('../util/files.cjs');
 const { registerGatePage } = require('../review/pages.cjs');
 
+/** Stop 3 when the owner records their own voice: their test recording and its measurements. */
+function recordedPage({ report, issues = [] }) {
+  const items = [
+    `Length ${report.durationSec} s · Sample rate ${report.sampleRate} Hz`,
+    `Loudness ${report.lufs} LUFS · Peak ${report.truePeak} dBTP · Clipping: ${report.clips ? `${report.clips} time(s)` : 'none'}`,
+    `Noise floor ${report.noiseFloorDb} dBFS (lower is quieter)`,
+  ];
+  if (report.width) items.push(`Video ${report.width}×${report.height} at ${report.fps} fps`);
+  return {
+    title: 'Stop 3 — Your recording',
+    intro: 'Check your microphone and room before you record the whole video.',
+    sections: [
+      {
+        heading: 'Your test recording',
+        kind: 'audio',
+        items: [
+          {
+            path: 'work/voice/sample/recording.wav',
+            label: 'Listen for room echo, hum, and words that are hard to hear.',
+          },
+        ],
+      },
+      { heading: 'Measurements', kind: 'list', items },
+      ...(issues.length ? [{ heading: 'Problems to fix first', kind: 'list', items: issues }] : []),
+      {
+        kind: 'text',
+        text:
+          'If it sounds good, approve. Then record each chapter from the Teleprompter (link on the ' +
+          'review home page) and save them as recordings/c01, c02, …',
+      },
+    ],
+  };
+}
+
 registerGatePage('gate:voice', (project) => {
   const dir = project.path('work', 'voice', 'sample');
   const manifestFile = `${dir}/manifest.json`;
@@ -14,6 +48,7 @@ registerGatePage('gate:voice', (project) => {
     };
   }
   const manifest = readJson(manifestFile);
+  if (manifest.recorded) return recordedPage(manifest);
   const alignmentFile = `${dir}/alignment.json`;
   const alignment = fs.existsSync(alignmentFile)
     ? readJson(alignmentFile)

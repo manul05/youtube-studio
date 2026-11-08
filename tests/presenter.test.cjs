@@ -107,3 +107,93 @@ test('the teleprompter page script is valid JavaScript', () => {
   assert.ok(scripts.length >= 1);
   for (const code of scripts) new vm.Script(code.replace(/\/\*TELEPROMPTER_DATA\*\/\s*null/, '{}'));
 });
+
+/** A speech-like test recording: 220 Hz bursts with real pauses, plus optional noise and gain. */
+function recording(file, { seconds = 12, gain = 0.3, noise = 0.0003, video = null } = {}) {
+  const { run, ffmpegPath } = require('../engine/util/proc.cjs');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const voice = `sine=f=220:d=${seconds},volume='if(lt(mod(t\,1)\,0.6)\,${gain}\,0)':eval=frame`;
+  const args = ['-v', 'error', '-y', '-f', 'lavfi', '-i', voice];
+  args.push('-f', 'lavfi', '-i', `anoisesrc=d=${seconds}:c=white:a=${noise}`);
+  if (video)
+    args.push(
+      '-f',
+      'lavfi',
+      '-i',
+      `testsrc=size=${video.size}:rate=${video.fps}:duration=${seconds}`,
+    );
+  args.push('-filter_complex', '[0:a][1:a]amix=inputs=2:normalize=0[a]', '-map', '[a]');
+  if (video) args.push('-map', '2:v', '-pix_fmt', 'yuv420p');
+  args.push('-ar', '48000', file);
+  run(ffmpegPath(), args);
+  return file;
+}
+
+test('a clean test recording passes and stop 3 can play it', () => {
+  const { checkRecording } = require('../engine/presenter/recording-check.cjs');
+  const project = tempProject();
+  recording(project.path('recordings', 'sample.wav'));
+  const { issues, report } = checkRecording(project);
+  assert.deepEqual(issues, []);
+  assert.ok(report.noiseFloorDb < -50, `noise floor ${report.noiseFloorDb}`);
+  assert.equal(report.sampleRate, 48000);
+  assert.ok(fs.existsSync(project.path('work', 'voice', 'sample', 'recording.wav')));
+});
+
+test('a clipped test recording is rejected with its clip count', () => {
+  const { checkRecording } = require('../engine/presenter/recording-check.cjs');
+  const project = tempProject();
+  recording(project.path('recordings', 'sample.wav'), { gain: 40 });
+  const { issues } = checkRecording(project);
+  assert.ok(
+    issues.some((i) => /clips \d+ time/.test(i)),
+    issues.join('\n'),
+  );
+});
+
+test('a noisy test recording reports its noise floor', () => {
+  const { checkRecording } = require('../engine/presenter/recording-check.cjs');
+  const project = tempProject();
+  recording(project.path('recordings', 'sample.wav'), { noise: 0.05 });
+  const { issues, report } = checkRecording(project);
+  assert.ok(report.noiseFloorDb > -50);
+  assert.ok(
+    issues.some((i) => /noise floor -\d+(\.\d)? dBFS/.test(i)),
+    issues.join('\n'),
+  );
+});
+
+test('a missing test recording, and a low-resolution face recording, are explained', () => {
+  const { checkRecording } = require('../engine/presenter/recording-check.cjs');
+  const voice = tempProject();
+  assert.match(checkRecording(voice).issues.join('\n'), /recordings\/sample\./);
+  const face = tempProject({ mode: 'face' });
+  recording(face.path('recordings', 'sample.mp4'), { video: { size: '1280x720', fps: 30 } });
+  assert.match(checkRecording(face).issues.join('\n'), /1280×720/);
+});
+
+test('stop 3 plays the owner test recording and shows its measurements', () => {
+  const { checkRecording } = require('../engine/presenter/recording-check.cjs');
+  require('../engine/review/register-pages.cjs');
+  const { pageData } = require('../engine/review/pages.cjs');
+  const project = tempProject();
+  recording(project.path('recordings', 'sample.wav'));
+  checkRecording(project);
+  const page = pageData(project, 'gate:voice');
+  const audio = page.sections.find((s) => s.kind === 'audio');
+  assert.equal(audio.items[0].path, 'work/voice/sample/recording.wav');
+  const text = JSON.stringify(page.sections);
+  assert.match(text, /Noise floor/);
+  assert.match(text, /Sample rate 48000 Hz/);
+});
+
+test('the recording:check command stamps the voice-sample step only when it passes', async () => {
+  const { main } = require('../tools/studio.cjs');
+  const { stepState } = require('../engine/next.cjs');
+  const project = tempProject();
+  recording(project.path('recordings', 'sample.wav'), { noise: 0.05 });
+  assert.equal(await main(['recording:check', project.dir]), 1);
+  recording(project.path('recordings', 'sample.wav'));
+  assert.equal(await main(['recording:check', project.dir]), 0);
+  assert.notEqual(stepState(project, 'voice-sample'), 'todo');
+});

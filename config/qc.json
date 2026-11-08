@@ -24,5 +24,12 @@
   "thumbMinTextHeight": 0.18,
   "thumbMinContrast": 4.5,
   "thumbMaxEdgeDensity": 0.2,
-  "imageMinCropWidth": 960
+  "imageMinCropWidth": 960,
+  "recordingNoiseFloorMax": -50,
+  "recordingMinLufs": -40,
+  "recordingMinSampleRate": 44100,
+  "recordingMinWidth": 1920,
+  "recordingMinHeight": 1080,
+  "recordingFpsMin": 25,
+  "recordingFpsMax": 60
 }

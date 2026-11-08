@@ -38,7 +38,7 @@ Only when a studio command **crashes** (a stack trace instead of a list of issue
 
 ## Tests
 
-- `npm test` — unit and integration tests (`tests/*.test.cjs`), no network.
+- `npm test` — unit and integration tests (`tests/*.test.cjs`), no network. All test commands run through `tools/run-tests.cjs`, which deletes every temporary file afterwards; never call `node --test` on the whole suite directly.
 - `npm run test:e2e` — full English and Hindi runs with a simulated voice and recogniser.
 - `npm run test:live` — real Gemini TTS and real faster-whisper; needs `GEMINI_API_KEY`, uses free-tier quota.
 - `npm run doctor` — checks tools, fonts and keys.

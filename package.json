@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=1 \"tests/*.test.cjs\"",
+    "test": "node tools/run-tests.cjs --test-concurrency=1 \"tests/*.test.cjs\"",
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "help": "node tools/studio.cjs help",
@@ -23,7 +23,7 @@
     "voice:sample": "node tools/studio.cjs voice:sample",
     "voice": "node tools/studio.cjs voice",
     "voice:retake": "node tools/studio.cjs voice:retake",
-    "test:live": "node --test \"tests/live/*.live.cjs\"",
+    "test:live": "node tools/run-tests.cjs \"tests/live/*.live.cjs\"",
     "align": "node tools/studio.cjs align",
     "voice:check": "node tools/studio.cjs voice:check",
     "plan": "node tools/studio.cjs plan",
@@ -51,7 +51,7 @@
     "score": "node tools/studio.cjs score",
     "release": "node tools/studio.cjs release",
     "maps:check": "node tools/map-check.cjs",
-    "test:e2e": "node --test --test-timeout=3600000 \"tests/e2e/*.test.cjs\""
+    "test:e2e": "node tools/run-tests.cjs --test-timeout=3600000 \"tests/e2e/*.test.cjs\""
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.100"

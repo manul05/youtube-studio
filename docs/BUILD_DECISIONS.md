@@ -147,3 +147,4 @@ Every decision the builder made on the owner's behalf while building Phase 1, in
 - Ruling (A5): in voice/face mode, alignment matches the script's real spelling (pronunciation hints are for the AI voice only); a sentence the recogniser cannot find is never cut — cost if wrong: an unfound stumble stays in the audio.
 - Found by the A7 end-to-end test and fixed: Shorts open with a separately recorded hook line, so in voice mode the owner also records the hook lines (`recordings/hooks.*`, shown at the end of the teleprompter); the test-recording step cleans it and places each hook — cost if wrong: none.
 - Phase A done: voice-mode end-to-end video released at 97.9 with a retake cut and a 2 s pause shortened.
+- Ruling: every test command runs through tools/run-tests.cjs, which gives the run its own temporary folder and deletes it at the end (pass or fail) — earlier runs left 1,503 folders (6.9 GB) in Temp and filled the C: drive — cost if wrong: none.

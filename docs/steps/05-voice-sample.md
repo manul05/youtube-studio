@@ -1,5 +1,7 @@
 # 05 · Voice sample (then stop 3)
 
+> **Owner records their own voice?** If `brief.presenter.mode` is `voice` or `face`, follow `05-recording-check.md` instead (`npm run next` names it).
+
 **Purpose:** the owner hears the voice, the names and the Shorts hooks before the full narration is recorded.
 
 **Command:** `npm run voice:sample -- <project>`. **Output:** `work/voice/sample/`. **Then:** stop 3.

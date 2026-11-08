@@ -27,4 +27,9 @@ const CODE_ONLY = ['E', 'H', 'J'];
 const OWNER_MAP = { A: ['A'], BG: ['B', 'G'], D: ['D'], F: ['F'], I: ['I'] };
 const LEVELS = { Excellent: 1, Good: 0.9, OK: 0.75, Weak: 0.5, Bad: 0 };
 
-module.exports = { NAMES, RUBRIC, AI_CATEGORIES, CODE_ONLY, OWNER_MAP, LEVELS };
+/** Category names for a presenter mode: with the owner's own voice, D judges their delivery. */
+function namesFor(mode = 'ai') {
+  return mode === 'ai' ? NAMES : { ...NAMES, D: 'Delivery' };
+}
+
+module.exports = { NAMES, namesFor, RUBRIC, AI_CATEGORIES, CODE_ONLY, OWNER_MAP, LEVELS };

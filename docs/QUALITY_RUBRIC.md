@@ -15,7 +15,7 @@ For judged categories the **lower** of AI and owner counts. Owner levels: Excell
 | A | Hook and first 30 s | 10 | AI, owner | Starts inside a concrete moment; a question you need answered; no preamble | Clear topic but generic opening | "Hi guys, in this video…"; logo intro |
 | B | Story and script | 15 | AI, owner | Clear promise, re-hooks every 60–90 s, satisfying payoff, natural spoken language | Informative but list-like | Rambling, repetitive, or reads like an essay |
 | C | Facts and safety | 10 | measured, AI | Every claim sourced and dated, allegations attributed, disputes shown as disputes | Minor attribution gaps | Unsourced or one-sided claims (hard failure if unledgered) |
-| D | Voice | 10 | owner (+ measured silences) | Natural pace, names right, warm delivery | Slightly flat or a mispronounced name | Robotic, rushed, wrong names |
+| D | Voice (Delivery when you record your own voice) | 10 | owner (+ measured silences) | Natural pace, names right, warm delivery; own voice: clear, energetic, confident | Slightly flat or a mispronounced name | Robotic, rushed, wrong names; own voice: mumbled, monotone, noisy room |
 | E | Audio mix | 5 | measured | −14 LUFS ±1, true peak ≤ −1 dBTP, voice ≥ 15 dB over music | — | Any miss |
 | F | Visual quality and style coherence | 15 | AI, owner | Strong artwork, consistent style, clean typography, no AI glitches | A few weak images | Mismatched styles, garbled AI text, clutter |
 | G | Pacing and motion | 15 | measured, AI, owner | Something meaningful changes every 3–5 s; motion has purpose | Occasional 5–6 s holds | **A two-box slide held 17 s** (hard failure over 6 s) |

@@ -1,5 +1,7 @@
 # 06 · Full voice
 
+> **Owner records their own voice?** If `brief.presenter.mode` is `voice` or `face`, follow `06-recording.md` instead (`npm run next` names it).
+
 **Command:** `npm run voice -- <project>`. **Output:** `work/voice/chapters/`.
 
 - One Gemini call per chapter. Finished chapters are cached; changing a chapter's text re-records only that chapter.

@@ -1,5 +1,7 @@
 # 07 · Align
 
+> **Owner's own recordings** (`brief.presenter.mode` `voice` or `face`): align first edits each chapter — last take of every sentence, no restarts, pauses ≤ 0.35 s — into `work/takes/`, then aligns the edited audio. Unscripted passages are cut and listed for stop 4 (see `06-recording.md`).
+
 **Command:** `npm run align -- <project>`. **Output:** `work/voice/paragraphs/`, `work/align/`.
 
 - Times every spoken word (faster-whisper, matched to the known script) and cuts each chapter into paragraphs. The first run downloads the speech model once.

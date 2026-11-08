@@ -461,3 +461,28 @@ test('stop 4 lists each unscripted passage with a player at its place in the raw
     end: 7.3,
   });
 });
+
+test('voice mode calls category D "Delivery" and keeps every weight', () => {
+  const { namesFor, RUBRIC, NAMES } = require('../engine/score/rubric.cjs');
+  assert.equal(namesFor('ai').D, 'Voice');
+  assert.equal(namesFor('voice').D, 'Delivery');
+  assert.equal(namesFor('face').D, 'Delivery');
+  assert.equal(NAMES.D, 'Voice');
+  assert.deepEqual(RUBRIC.long, {
+    A: 10,
+    B: 15,
+    C: 10,
+    D: 10,
+    E: 5,
+    F: 15,
+    G: 15,
+    H: 5,
+    I: 10,
+    J: 5,
+  });
+  require('../engine/review/register-pages.cjs');
+  const { pageData } = require('../engine/review/pages.cjs');
+  const page = pageData(tempProject(), 'gate:final');
+  const form = page.sections.find((s) => s.kind === 'form');
+  assert.match(form.questions.find((q) => q.id === 'D').label, /your delivery/i);
+});

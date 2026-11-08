@@ -7,11 +7,8 @@ const { run, ffmpegPath } = require('../util/proc.cjs');
 const { presenterMode } = require('../steps.cjs');
 const { chapterId } = require('../voice/synthesize.cjs');
 const { clippedRuns } = require('../align/voice-check.cjs');
-const { findRecording, RECORDING_EXTENSIONS } = require('./recording-check.cjs');
+const { findRecording, RECORDING_EXTENSIONS, VOICE_CHAIN } = require('./recording-check.cjs');
 
-// Light, free clean-up for a spoken voice: rumble filter, broadband denoise, gentle compression.
-const VOICE_CHAIN =
-  'highpass=f=80,afftdn=nf=-25,acompressor=threshold=-20dB:ratio=3:attack=5:release=120';
 const VIDEO_ARGS = ['-vf', 'fps=30,format=yuv420p', '-c:v', 'libx264', '-crf', '18'];
 const VIDEO_COLOUR = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709'];
 // Changing the chain or video settings must redo every import.
@@ -110,4 +107,4 @@ function importRecordings(project) {
   return result;
 }
 
-module.exports = { importRecordings, VOICE_CHAIN };
+module.exports = { importRecordings };

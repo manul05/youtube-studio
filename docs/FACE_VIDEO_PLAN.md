@@ -1,6 +1,8 @@
 # Face video mode — design and build plan
 
-**Status:** planned, not built. Written 2026-11-08 for any agent (Codex, Antigravity, Cursor, Claude Code) to build later. Read `AGENTS.md` and `docs/MAINTAINING.md` first; every rule there applies (failing test first, never weaken a check, `npm test` + `npm run lint` + `npm run test:e2e` before each commit).
+**Status:** Phase A (own voice) **built** — tasks A1–A7 done, with a voice-mode end-to-end test; use it with `"presenter": { "mode": "voice" }` in the brief. Phase B (face) planned, not built. Changes made while building A are listed in `docs/BUILD_DECISIONS.md` (ad-libs are shown at stop 4 and cut unless added to the script; the owner also records the Shorts hook lines as `recordings/hooks.*`).
+
+**Original status:** planned, not built. Written 2026-11-08 for any agent (Codex, Antigravity, Cursor, Claude Code) to build later. Read `AGENTS.md` and `docs/MAINTAINING.md` first; every rule there applies (failing test first, never weaken a check, `npm test` + `npm run lint` + `npm run test:e2e` before each commit).
 
 ## Goal
 

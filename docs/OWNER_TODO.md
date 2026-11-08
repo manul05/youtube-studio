@@ -28,7 +28,8 @@ What is left for you (the owner). Tick items off as you go; any agent can help w
 
 ## Optional improvements (ask an agent, pointing it to `docs/MAINTAINING.md`)
 
-- **Face videos (Dhruv Rathee style)** or **your own voice**: the build plan is `docs/FACE_VIDEO_PLAN.md`. Answer its five questions, then paste `prompts/BUILD_FACE_MODE.txt` into your agent.
+- **Your own voice is ready** (Phase A): in `prompts/DAILY.txt` write `Voice: my own voice`. You record from the teleprompter (`npm run review -- <project>` → Teleprompter): a 30 s test (`recordings/sample.wav`), the Shorts hook lines (`recordings/hooks.wav`), then one file per chapter (`recordings/c01.wav`, …). Guide: `docs/steps/06-recording.md`.
+- **Face videos (Dhruv Rathee style)** — Phase B of `docs/FACE_VIDEO_PLAN.md`: paste `prompts/BUILD_FACE_MODE.txt` (your answers are already in `docs/BUILD_DECISIONS.md`) and ask it to build Phase B, tasks B1–B7.
 - Music variety: rotate through every matching track instead of alternating the top two.
 - A "chat handoff" so a chat model (e.g. Argon 4 in Gemini) can write research and script.
 - The deferred minor issues listed in `docs/BUILD_DECISIONS.md`.

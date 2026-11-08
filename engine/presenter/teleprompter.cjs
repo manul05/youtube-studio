@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { readJson } = require('../util/files.cjs');
 const { spokenText } = require('../words/text.cjs');
 const { chapterId } = require('../voice/synthesize.cjs');
+const { shortsHooks } = require('./recording-check.cjs');
 
 /**
  * What the owner reads aloud: every chapter of script.json in order, each paragraph in its real
@@ -14,15 +15,20 @@ function teleprompterData(project) {
   const file = project.path('script.json');
   if (!fs.existsSync(file)) throw new Error('No script yet: finish the script step first.');
   const brief = project.brief;
-  return {
-    project: project.name,
-    script: brief.captionScript || 'latin',
-    chapters: readJson(file).chapters.map((chapter) => ({
-      title: chapter.title,
-      file: `recordings/${chapterId(chapter)}.<ext>`,
-      paragraphs: chapter.paragraphs.map((p) => spokenText(p).captions),
-    })),
-  };
+  const chapters = readJson(file).chapters.map((chapter) => ({
+    title: chapter.title,
+    file: `recordings/${chapterId(chapter)}.<ext>`,
+    paragraphs: chapter.paragraphs.map((p) => spokenText(p).captions),
+  }));
+  const hooks = shortsHooks(project);
+  if (hooks.length) {
+    chapters.push({
+      title: 'Shorts hook lines (one file, a 1 s pause between lines)',
+      file: 'recordings/hooks.<ext>',
+      paragraphs: hooks.map((h) => h.text),
+    });
+  }
+  return { project: project.name, script: brief.captionScript || 'latin', chapters };
 }
 
 module.exports = { teleprompterData };

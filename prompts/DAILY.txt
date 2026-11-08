@@ -7,6 +7,7 @@ Language: <en | hi | hinglish>   Captions script: <latin | deva>
 Length: <minutes, e.g. 12>
 Formats: <long + 3 Shorts | long only>
 Style: <suggest | a pack id from styles/gallery.html>   Accents: <none | e.g. quote: kinetic>
+Voice: <AI voice | my own voice>   (my own voice: set brief.presenter.mode to "voice"; I will record from the teleprompter)
 Must include: <facts, names, moments the video must cover>
 Avoid: <anything to leave out>
 

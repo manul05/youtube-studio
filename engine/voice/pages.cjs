@@ -5,7 +5,8 @@ const { readJson } = require('../util/files.cjs');
 const { registerGatePage } = require('../review/pages.cjs');
 
 /** Stop 3 when the owner records their own voice: their test recording and its measurements. */
-function recordedPage({ report, issues = [] }) {
+function recordedPage({ report, issues = [], items: recorded = [] }) {
+  const hookItem = recorded.find((i) => i.kind === 'hooks');
   const items = [
     `Length ${report.durationSec} s · Sample rate ${report.sampleRate} Hz`,
     `Loudness ${report.lufs} LUFS · Peak ${report.truePeak} dBTP · Clipping: ${report.clips ? `${report.clips} time(s)` : 'none'}`,
@@ -27,6 +28,20 @@ function recordedPage({ report, issues = [] }) {
         ],
       },
       { heading: 'Measurements', kind: 'list', items },
+      ...(hookItem
+        ? [
+            {
+              heading: 'Your Shorts hook lines',
+              kind: 'audio',
+              items: [
+                {
+                  path: 'work/voice/sample/hooks.wav',
+                  label: hookItem.hooks.map((h) => `${h.id}: ${h.text}`).join(' · '),
+                },
+              ],
+            },
+          ]
+        : []),
       ...(issues.length ? [{ heading: 'Problems to fix first', kind: 'list', items: issues }] : []),
       {
         kind: 'text',

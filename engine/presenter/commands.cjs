@@ -2,7 +2,7 @@
 
 const { openProject } = require('../project.cjs');
 const { writeStamp } = require('../next.cjs');
-const { checkRecording } = require('./recording-check.cjs');
+const { recordSample } = require('./recording-check.cjs');
 const { importRecordings } = require('./import.cjs');
 
 function projectFrom(positional, example) {
@@ -14,9 +14,9 @@ function projectFrom(positional, example) {
 const COMMANDS = {
   'recording:check': {
     summary: "Check the owner's test recording (recordings/sample.*) before recording the video.",
-    run: ({ positional }) => {
+    run: async ({ positional }) => {
       const project = projectFrom(positional, 'recording:check');
-      const { issues, report } = checkRecording(project);
+      const { issues, report } = await recordSample(project);
       if (report) {
         console.log(
           `Test recording: ${report.durationSec} s, ${report.lufs} LUFS, peak ${report.truePeak} dBTP, ` +

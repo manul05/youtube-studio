@@ -21,6 +21,7 @@
 | `style` | `npm run style:suggest -- <project>` gives three fits; show the owner `styles/gallery.html`. `main` is a pack id; `accents` maps up to two beat types to accent packs, e.g. `{"quote": "kinetic"}`. |
 | `formats` | `["long", "short"]` unless the owner says otherwise. |
 | `voice` (optional) | `{ "name": "…", "style": "…" }` to override the channel's default voice. |
+| `presenter` (optional) | `{ "mode": "voice" }` when the owner records their own voice (teleprompter, `recordings/`); leave it out for the AI voice. `"face"` (on camera) is not built yet — see `docs/FACE_VIDEO_PLAN.md`. |
 
 ## Done when
 

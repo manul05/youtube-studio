@@ -2,7 +2,8 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { writeJson, ensureDir } = require('../util/files.cjs');
+const { readJson, writeJson, ensureDir } = require('../util/files.cjs');
+const { alignSample } = require('../align/sample.cjs');
 const { run, ffmpegPath, probe } = require('../util/proc.cjs');
 const { qc } = require('../config.cjs');
 const { presenterMode } = require('../steps.cjs');
@@ -12,6 +13,9 @@ const { clippedRuns } = require('../align/voice-check.cjs');
 
 const RECORDING_EXTENSIONS = ['wav', 'm4a', 'mp3', 'mp4', 'mov', 'aac', 'flac'];
 const WINDOW_SEC = 0.05;
+// Light, free clean-up for a spoken voice: rumble filter, broadband denoise, gentle compression.
+const VOICE_CHAIN =
+  'highpass=f=80,afftdn=nf=-25,acompressor=threshold=-20dB:ratio=3:attack=5:release=120';
 
 /** The owner's file for a recording slot ("sample", "c01", …), or null. */
 function findRecording(project, name) {
@@ -132,13 +136,56 @@ function checkRecording(project) {
       }
     }
   }
+  // Each Short opens with its own hook line: the owner records them together in one file.
+  const hooks = shortsHooks(project);
+  const items = [];
+  if (hooks.length) {
+    const hookSource = findRecording(project, 'hooks');
+    if (!hookSource) {
+      issues.push(
+        `No Shorts hooks recording: read the ${hooks.length} hook lines at the end of the teleprompter, once each with a 1 s pause, and save them as recordings/hooks.<ext>.`,
+      );
+    } else {
+      run(ffmpegPath(), [
+        ...['-v', 'error', '-y', '-i', hookSource, '-vn', '-af', VOICE_CHAIN],
+        ...['-ar', '48000', '-ac', '2', '-c:a', 'pcm_s16le', path.join(dir, 'hooks.wav')],
+      ]);
+      items.push({ file: 'hooks.wav', kind: 'hooks', hooks });
+    }
+  }
   writeJson(path.join(dir, 'manifest.json'), {
     recorded: true,
     mode: presenterMode(project),
     report,
     issues,
+    items,
   });
   return { issues, report };
 }
 
-module.exports = { checkRecording, findRecording, noiseFloorDb, RECORDING_EXTENSIONS };
+/** The Shorts hook lines to record, when the brief plans Shorts. */
+function shortsHooks(project) {
+  const file = project.path('shorts.json');
+  if (!(project.brief.formats || []).includes('short') || !fs.existsSync(file)) return [];
+  return readJson(file).map((s) => ({ id: s.id, text: s.hookLine }));
+}
+
+/**
+ * The test-recording step: check the recording, then find each Shorts hook line in the hooks
+ * recording (work/voice/sample/alignment.json, as the AI voice sample does).
+ */
+async function recordSample(project, { asr } = {}) {
+  const result = checkRecording(project);
+  if (!result.issues.length && shortsHooks(project).length) await alignSample(project, { asr });
+  return result;
+}
+
+module.exports = {
+  checkRecording,
+  recordSample,
+  shortsHooks,
+  findRecording,
+  noiseFloorDb,
+  RECORDING_EXTENSIONS,
+  VOICE_CHAIN,
+};

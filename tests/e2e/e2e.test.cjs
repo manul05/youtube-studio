@@ -99,6 +99,109 @@ async function fakeGemini(url, init) {
 }
 
 /** Simulated recogniser: the words the voice was given, spread evenly over the audio. */
+/**
+ * An owner recording: a 170 Hz tone for each word at its exact time, near-silence (about
+ * -64 dBFS of noise) everywhere else, like a quiet room between words. 48 kHz mono.
+ */
+function recordingWav(timeline, seconds) {
+  const rate = 48000;
+  const n = Math.round(rate * seconds);
+  const buf = Buffer.alloc(44 + n * 2);
+  buf.write('RIFF', 0);
+  buf.writeUInt32LE(36 + n * 2, 4);
+  buf.write('WAVEfmt ', 8);
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20);
+  buf.writeUInt16LE(1, 22);
+  buf.writeUInt32LE(rate, 24);
+  buf.writeUInt32LE(rate * 2, 28);
+  buf.writeUInt16LE(2, 32);
+  buf.writeUInt16LE(16, 34);
+  buf.write('data', 36);
+  buf.writeUInt32LE(n * 2, 40);
+  let seed = 7;
+  const noise = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return (seed / 2147483648 - 0.5) * 40;
+  };
+  let w = 0;
+  for (let i = 0; i < n; i += 1) {
+    const t = i / rate;
+    while (w < timeline.length && timeline[w].end < t) w += 1;
+    const inWord = w < timeline.length && t >= timeline[w].start && t <= timeline[w].end;
+    const v = inWord ? 4500 * Math.sin(2 * Math.PI * 170 * t) : noise();
+    buf.writeInt16LE(Math.round(v), 44 + i * 2);
+  }
+  return buf;
+}
+
+// Recogniser words for each recorded chapter, by chapter id (the recordings are generated with
+// exact word times, so the simulated recogniser returns those).
+const RECORDED = {};
+
+async function fakeRecordedAsr(audioPath) {
+  return RECORDED[path.basename(audioPath, '.wav')] || [];
+}
+
+/** Word timeline for spoken phrases: 0.38 s per word, the given pause after each phrase. */
+function timelineOf(phrases) {
+  const out = [];
+  let t = 0.4;
+  for (const { text, pause } of phrases) {
+    for (const token of words(text)) {
+      out.push({ text: token, start: t, end: t + 0.3 });
+      t += SECONDS_PER_WORD;
+    }
+    t += pause;
+  }
+  return { words: out, seconds: t + 0.5 };
+}
+
+/**
+ * The owner records instead of the AI voice: a test recording, then one file per chapter.
+ * Chapter 1 repeats its first sentence (a retake) and chapter 2 has a 2 s pause, so the edit
+ * must cut the first take and shorten the pause.
+ */
+async function recordOwner(project, script) {
+  const { sentences } = require('../../engine/words/text.cjs');
+  const opening = script.chapters[0].paragraphs[0];
+  const sample = timelineOf(
+    Array.from({ length: 4 }, () => ({
+      text: opening.text.replace(/\[\[[^\]]+\]\]/g, ''),
+      pause: 0.4,
+    })),
+  );
+  writeMedia(project, 'recordings/sample.wav', recordingWav(sample.words, sample.seconds));
+  const hookLines = readJson(project.path('shorts.json')).map((s) => ({
+    text: s.hookLine,
+    pause: 1,
+  }));
+  const hooks = timelineOf(hookLines);
+  RECORDED.hooks = hooks.words;
+  writeMedia(project, 'recordings/hooks.wav', recordingWav(hooks.words, hooks.seconds));
+  // The command would run the real recogniser; the simulated one returns the known word times.
+  const { recordSample } = require('../../engine/presenter/recording-check.cjs');
+  assert.deepEqual((await recordSample(project, { asr: fakeRecordedAsr })).issues, []);
+  writeStamp(project, 'voice-sample');
+  approve(project, 'gate:voice');
+  for (const chapter of script.chapters) {
+    const phrases = [];
+    chapter.paragraphs.forEach((p, pi) => {
+      sentences(p.text, p.id).forEach((s, si) => {
+        if (chapter.id === 1 && pi === 0 && si === 0) phrases.push({ text: s.spoken, pause: 0.6 });
+        const last = si === sentences(p.text, p.id).length - 1;
+        const pause = chapter.id === 2 && pi === 0 && si === 0 ? 2.0 : last ? 0.45 : 0.25;
+        phrases.push({ text: s.spoken, pause });
+      });
+    });
+    const { words: timeline, seconds } = timelineOf(phrases);
+    const cid = `c0${chapter.id}`;
+    RECORDED[cid] = timeline;
+    writeMedia(project, `recordings/${cid}.wav`, recordingWav(timeline, seconds));
+  }
+  await cli(['recording:import', project.dir]);
+}
+
 async function fakeAsr(audioPath) {
   const meta = `${audioPath.slice(0, -4)}.json`;
   const text = fs.existsSync(meta) ? readJson(meta).text : '';
@@ -264,6 +367,11 @@ function writeFile(project, rel, value) {
   fs.writeFileSync(project.path(rel), `${JSON.stringify(value, null, 2)}\n`);
 }
 
+function writeMedia(project, rel, bytes) {
+  fs.mkdirSync(path.dirname(project.path(rel)), { recursive: true });
+  fs.writeFileSync(project.path(rel), bytes);
+}
+
 function post(url, body) {
   return new Promise((resolve, reject) => {
     const req = http.request(
@@ -282,7 +390,7 @@ function post(url, body) {
 
 // ---------- the run ----------
 
-async function produce(lang) {
+async function produce(lang, { mode = 'ai' } = {}) {
   const c = CONTENT[lang];
   const projectsDir = fs.mkdtempSync(path.join(os.tmpdir(), `studio-e2e-${lang}-`));
   const project = openProject(
@@ -363,6 +471,7 @@ async function produce(lang) {
     lengthTargetMin: Math.round((estimateSec / 60) * 100) / 100,
     style: { main: 'editorial', accents: { quote: 'kinetic' } },
     formats: ['long', 'short'],
+    ...(mode === 'ai' ? {} : { presenter: { mode } }),
   });
   writeFile(project, 'brief.json', brief);
   await cli(['brief:check', project.dir]);
@@ -422,15 +531,20 @@ async function produce(lang) {
   await cli(['script:check', project.dir]);
   approve(project, 'gate:script');
 
-  // 5–7 · Voice sample, voice, align (simulated Gemini and recogniser)
+  // 5–7 · Voice sample, voice, align (simulated Gemini and recogniser, or owner recordings)
   const gemini = { fetch: fakeGemini, apiKey: 'test-key' };
-  assert.equal((await synthesizeSample(project, gemini)).rateLimited, false);
-  await alignSample(project, { asr: fakeAsr });
-  writeStamp(project, 'voice-sample');
-  approve(project, 'gate:voice');
-  assert.deepEqual((await synthesizeChapters(project, gemini)).pending, []);
-  writeStamp(project, 'voice');
-  assert.deepEqual((await alignProject(project, { asr: fakeAsr })).issues, []);
+  if (mode === 'ai') {
+    assert.equal((await synthesizeSample(project, gemini)).rateLimited, false);
+    await alignSample(project, { asr: fakeAsr });
+    writeStamp(project, 'voice-sample');
+    approve(project, 'gate:voice');
+    assert.deepEqual((await synthesizeChapters(project, gemini)).pending, []);
+    writeStamp(project, 'voice');
+  } else {
+    await recordOwner(project, script);
+  }
+  const asr = mode === 'ai' ? fakeAsr : fakeRecordedAsr;
+  assert.deepEqual((await alignProject(project, { asr })).issues, []);
   assert.deepEqual(voiceIssues(project).issues, []);
   writeStamp(project, 'align');
 
@@ -498,3 +612,25 @@ for (const lang of ['en', 'hi']) {
     },
   );
 }
+
+test(
+  "a voice-mode project (the owner's own recordings) goes from idea to a released 95+ package",
+  { timeout: 45 * 60 * 1000 },
+  async () => {
+    const { project, out } = await produce('en', { mode: 'voice' });
+    assert.ok(fs.existsSync(path.join(out.dir, 'master.mp4')));
+    assert.equal(out.score.releasable, true);
+    assert.ok(out.score.total >= 95, `score ${out.score.total}`);
+    assert.deepEqual(readJson(project.path('outputs', 'qc', 'qc.json')).hardFails, []);
+    // The first take of chapter 1's first sentence is cut; chapter 2's 2 s pause is shortened.
+    const edl1 = readJson(project.path('work', 'takes', 'c01.edl.json'));
+    assert.equal(edl1.retakes.length, 1, 'one retake found in chapter 1');
+    assert.ok(edl1.segments[0][0] >= edl1.retakes[0].end, 'the edit starts after the first take');
+    const raw2 = Number(
+      probe(project.path('work', 'voice', 'chapters', 'c02.wav')).format.duration,
+    );
+    const edited2 = Number(probe(project.path('work', 'takes', 'c02.wav')).format.duration);
+    assert.ok(raw2 - edited2 > 1.4, `chapter 2 lost ${raw2 - edited2} s of pause`);
+    assert.deepEqual(readJson(project.path('work', 'takes', 'c01.adlibs.json')).adlibs, []);
+  },
+);

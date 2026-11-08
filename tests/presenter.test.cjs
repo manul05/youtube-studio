@@ -486,3 +486,55 @@ test('voice mode calls category D "Delivery" and keeps every weight', () => {
   const form = page.sections.find((s) => s.kind === 'form');
   assert.match(form.questions.find((q) => q.id === 'D').label, /your delivery/i);
 });
+
+const HOOKS = [
+  {
+    id: 's1',
+    hookLine: 'One remark changed everything',
+    fromSentence: 'c01p01s1',
+    toSentence: 'c01p01s1',
+  },
+  {
+    id: 's2',
+    hookLine: 'Nobody saw this party coming',
+    fromSentence: 'c01p01s1',
+    toSentence: 'c01p01s1',
+  },
+];
+
+test('with Shorts planned, the test-recording step also cleans and places the hook lines', async () => {
+  const { recordSample } = require('../engine/presenter/recording-check.cjs');
+  const { hookSpan } = require('../engine/shorts/spans.cjs');
+  const project = tempProject();
+  fs.writeFileSync(project.path('shorts.json'), JSON.stringify(HOOKS));
+  recording(project.path('recordings', 'sample.wav'));
+  recording(project.path('recordings', 'hooks.wav'), { seconds: 6 });
+  const asr = async () => [...spoken(HOOKS[0].hookLine, 0.4), ...spoken(HOOKS[1].hookLine, 3.2)];
+  const { issues } = await recordSample(project, { asr });
+  assert.deepEqual(issues, []);
+  assert.ok(fs.existsSync(project.path('work', 'voice', 'sample', 'hooks.wav')));
+  const s2 = hookSpan(project, { id: 's2' });
+  assert.ok(Math.abs(s2.start - 3.2) < 0.05, `s2 hook at ${s2.start}`);
+});
+
+test('with Shorts planned, a missing hooks recording is explained', async () => {
+  const { recordSample } = require('../engine/presenter/recording-check.cjs');
+  const project = tempProject();
+  fs.writeFileSync(project.path('shorts.json'), JSON.stringify(HOOKS));
+  recording(project.path('recordings', 'sample.wav'));
+  const { issues } = await recordSample(project, { asr: async () => [] });
+  assert.match(issues.join('\n'), /recordings\/hooks\./);
+});
+
+test('the teleprompter ends with the Shorts hook lines to record', () => {
+  const { teleprompterData } = require('../engine/presenter/teleprompter.cjs');
+  const project = tempProject();
+  writeScript(project, TWO_CHAPTERS);
+  fs.writeFileSync(project.path('shorts.json'), JSON.stringify(HOOKS));
+  const last = teleprompterData(project).chapters.at(-1);
+  assert.equal(last.file, 'recordings/hooks.<ext>');
+  assert.deepEqual(
+    last.paragraphs,
+    HOOKS.map((h) => h.hookLine),
+  );
+});

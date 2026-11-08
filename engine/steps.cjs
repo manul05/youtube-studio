@@ -68,7 +68,13 @@ const STEPS = [
     {
       command: 'recording:check',
       playbook: '05-recording-check',
-      inputs: ['script.json', 'brief.json', 'recordings/sample.*'],
+      inputs: [
+        'script.json',
+        'shorts.json',
+        'brief.json',
+        'recordings/sample.*',
+        'recordings/hooks.*',
+      ],
     },
   ),
   gate('gate:voice', '05-voice-sample', [

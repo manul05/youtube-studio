@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test \"tests/*.test.cjs\"",
+    "test": "node --test --test-concurrency=1 \"tests/*.test.cjs\"",
     "format": "prettier --write .",
     "lint": "prettier --check .",
     "help": "node tools/studio.cjs help",
@@ -38,6 +38,8 @@
     "stock:search": "node tools/studio.cjs stock:search",
     "stock:pick": "node tools/studio.cjs stock:pick",
     "photos:search": "node tools/studio.cjs photos:search",
+    "recording:check": "node tools/studio.cjs recording:check",
+    "recording:import": "node tools/studio.cjs recording:import",
     "photos:pick": "node tools/studio.cjs photos:pick",
     "preview": "node tools/studio.cjs preview",
     "render": "node tools/studio.cjs render",

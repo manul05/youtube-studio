@@ -1,5 +1,7 @@
 'use strict';
 
+const { PRESENTER_MODES } = require('../steps.cjs');
+
 const LANGUAGES = ['en', 'hi', 'hinglish'];
 const SCRIPTS = ['latin', 'deva'];
 const FORMATS = ['long', 'short'];
@@ -54,6 +56,10 @@ function briefIssues(brief) {
   const formats = brief.formats || [];
   if (!formats.length || formats.some((f) => !FORMATS.includes(f))) {
     issues.push(`brief.formats must list ${FORMATS.join(' and/or ')}.`);
+  }
+  const mode = brief.presenter && brief.presenter.mode;
+  if (brief.presenter !== undefined && !PRESENTER_MODES.includes(mode)) {
+    issues.push(`brief.presenter.mode must be one of ${PRESENTER_MODES.join(', ')}.`);
   }
   return issues;
 }

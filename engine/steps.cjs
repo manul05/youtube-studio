@@ -7,20 +7,42 @@
  * the last segment is a wildcard.
  */
 
-const step = (id, command, playbook, inputs, outputs) => ({
-  id,
-  kind: 'step',
-  command,
-  playbook: `docs/steps/${playbook}.md`,
-  inputs: () => inputs,
-  outputs: () => outputs,
-});
+const PRESENTER_MODES = ['ai', 'voice', 'face'];
+
+/** The brief's presenter mode: "ai" (Gemini voice, the default), "voice" or "face" (owner recordings). */
+function presenterMode(project) {
+  const presenter = project && project.brief && project.brief.presenter;
+  return (presenter && presenter.mode) || 'ai';
+}
+
+/**
+ * A step. `recorded` optionally replaces its command, playbook, inputs and outputs when the owner
+ * records the narration (presenter mode "voice" or "face"); see docs/FACE_VIDEO_PLAN.md.
+ */
+const step = (id, command, playbook, inputs, outputs, recorded = null) => {
+  const pick = (project) =>
+    recorded && presenterMode(project) !== 'ai'
+      ? { command, playbook, inputs, outputs, ...recorded }
+      : { command, playbook, inputs, outputs };
+  return {
+    id,
+    kind: 'step',
+    command,
+    playbook: `docs/steps/${playbook}.md`,
+    commandFor: (project) => pick(project).command,
+    playbookFor: (project) => `docs/steps/${pick(project).playbook}.md`,
+    inputs: (project) => pick(project).inputs,
+    outputs: (project) => pick(project).outputs,
+  };
+};
 
 const gate = (id, playbook, covers) => ({
   id,
   kind: 'gate',
   command: 'review',
   playbook: `docs/steps/${playbook}.md`,
+  commandFor: () => 'review',
+  playbookFor: () => `docs/steps/${playbook}.md`,
   covers: () => covers,
 });
 
@@ -43,6 +65,11 @@ const STEPS = [
     '05-voice-sample',
     ['script.json', 'pronunciations.json', 'shorts.json', 'brief.json'],
     ['work/voice/sample/*'],
+    {
+      command: 'recording:check',
+      playbook: '05-recording-check',
+      inputs: ['script.json', 'brief.json', 'recordings/sample.*'],
+    },
   ),
   gate('gate:voice', '05-voice-sample', [
     'pronunciations.json',
@@ -55,6 +82,12 @@ const STEPS = [
     '06-voice',
     ['script.json', 'pronunciations.json', 'brief.json'],
     ['work/voice/chapters/*'],
+    {
+      command: 'recording:import',
+      playbook: '06-recording',
+      inputs: ['script.json', 'brief.json', 'recordings/c*'],
+      outputs: ['work/voice/chapters/*', 'work/presenter/*'],
+    },
   ),
   step(
     'align',
@@ -138,4 +171,4 @@ function findStep(id) {
   return entry;
 }
 
-module.exports = { STEPS, findStep };
+module.exports = { STEPS, findStep, presenterMode, PRESENTER_MODES };

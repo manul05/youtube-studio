@@ -186,3 +186,28 @@ test('brief:check fails on an empty brief and stamps the idea step once it passe
   }
   assert.equal(nextAction(openProject(dir)).stepId, 'gate:idea');
 });
+
+test('briefIssues accepts the presenter modes and rejects an unknown one', () => {
+  const brief = {
+    topic: 't',
+    angle: 'a',
+    audience: 'u',
+    promise: 'p',
+    language: 'en',
+    captionScript: 'latin',
+    channel: 'en-placeholder',
+    lengthTargetMin: 10,
+    titles: ['First title', 'Second title', 'Third title'],
+    thumbTexts: ['Big news', 'Why now', 'The cost'],
+    mood: ['tense'],
+    hook: 'h',
+    style: { main: 'editorial', accents: {} },
+    formats: ['long'],
+  };
+  for (const presenter of [undefined, { mode: 'ai' }, { mode: 'voice' }, { mode: 'face' }]) {
+    assert.ok(!briefIssues({ ...brief, presenter }).some((i) => /presenter/.test(i)));
+  }
+  assert.ok(
+    briefIssues({ ...brief, presenter: { mode: 'avatar' } }).some((i) => /presenter\.mode/.test(i)),
+  );
+});

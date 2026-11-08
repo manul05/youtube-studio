@@ -126,3 +126,25 @@ test('the final review covers the AI review and score files', () => {
   assert.ok(covers.includes('outputs/score/ai.json'));
   assert.ok(covers.includes('outputs/score/score.json'));
 });
+
+test('in voice mode the voice steps ask for the owner recordings', () => {
+  const { findStep } = require('../engine/steps.cjs');
+  const voiced = tempProject();
+  const brief = JSON.parse(fs.readFileSync(voiced.path('brief.json'), 'utf8'));
+  fs.writeFileSync(
+    voiced.path('brief.json'),
+    JSON.stringify({ ...brief, presenter: { mode: 'voice' } }),
+  );
+  assert.equal(findStep('voice-sample').commandFor(voiced), 'recording:check');
+  completeThrough(voiced, 'gate:voice');
+  const action = nextAction(voiced);
+  assert.equal(action.stepId, 'voice');
+  assert.equal(action.command, 'recording:import');
+  assert.equal(action.playbook, 'docs/steps/06-recording.md');
+  assert.ok(findStep('voice').inputs(voiced).includes('recordings/c*'));
+
+  const ai = tempProject();
+  completeThrough(ai, 'gate:voice');
+  assert.equal(nextAction(ai).command, 'voice');
+  assert.equal(findStep('voice-sample').commandFor(ai), 'voice:sample');
+});

@@ -123,8 +123,8 @@ function nextAction(project) {
   const entry = findStep(pending.id);
   return {
     stepId: entry.id,
-    command: entry.command,
-    playbook: entry.playbook,
+    command: entry.commandFor(project),
+    playbook: entry.playbookFor(project),
     reasons: pending.reasons,
   };
 }
